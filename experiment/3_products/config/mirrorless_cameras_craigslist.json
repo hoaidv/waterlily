@@ -1,0 +1,65 @@
+{
+  "category": "Mirrorless Cameras",
+  "website": "craigslist",
+  "search_query": "mirrorless camera",
+  "listing_selectors": {
+    "product_row": "li.result-row",
+    "product_link": "a.result-title"
+  },
+  "product_selectors": {
+    "title": [
+      {"selector": "span#titletextonly"}
+    ],
+    "price": [
+      {"selector": "span.price"}
+    ],
+    "description": [
+      {"selector": "section#postingbody"}
+    ]
+  },
+  "attributes": {
+    "brand": {
+      "method": "regex",
+      "pattern": "(Sony|Canon|Nikon|Fujifilm|Panasonic|Olympus|Leica|Hasselblad)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "model": {
+      "method": "regex",
+      "pattern": "(Alpha|A7|A9|EOS|Z\\d+|X-[A-Z]\\d+|LUMIX|OM-\\d+|[A-Z]+\\d+)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "megapixels": {
+      "method": "regex",
+      "pattern": "(\\d+\\.?\\d*)\\s*MP",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "sensor_type": {
+      "method": "regex",
+      "pattern": "(Full Frame|APS-C|Micro Four Thirds|MFT|Medium Format)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "video_capability": {
+      "method": "regex",
+      "pattern": "(4K|8K|Full HD|1080p)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "kit_type": {
+      "method": "regex",
+      "pattern": "(Body Only|Body|Kit|Bundle|with Lens)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "condition": {
+      "method": "regex",
+      "pattern": "(New|Like New|Excellent|Used|Good|Fair)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    }
+  }
+}
+

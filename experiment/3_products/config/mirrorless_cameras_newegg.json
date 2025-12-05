@@ -1,0 +1,62 @@
+{
+  "category": "Mirrorless Cameras",
+  "website": "newegg",
+  "search_query": "mirrorless camera",
+  "listing_selectors": {
+    "product_container": "div.item-cell",
+    "product_link": "a.item-title"
+  },
+  "product_selectors": {
+    "title": [
+      {"selector": "h1.product-title"}
+    ],
+    "price": [
+      {"selector": "li.price-current"}
+    ]
+  },
+  "attributes": {
+    "brand": {
+      "method": "regex",
+      "pattern": "(Sony|Canon|Nikon|Fujifilm|Panasonic|Olympus|Leica)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "model": {
+      "method": "regex",
+      "pattern": "(Alpha|EOS|Z\\d+|X-[A-Z]\\d+|LUMIX|OM-\\d+)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "megapixels": {
+      "method": "regex",
+      "pattern": "(\\d+\\.?\\d*)\\s*MP",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "sensor_type": {
+      "method": "regex",
+      "pattern": "(Full Frame|APS-C|Micro Four Thirds|MFT|Medium Format)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "video_capability": {
+      "method": "regex",
+      "pattern": "(4K|8K|Full HD|1080p|2160p)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "kit_type": {
+      "method": "regex",
+      "pattern": "(Body Only|Kit|Bundle|with Lens)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "condition": {
+      "method": "regex",
+      "pattern": "(New|Open Box|Refurbished)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    }
+  }
+}
+

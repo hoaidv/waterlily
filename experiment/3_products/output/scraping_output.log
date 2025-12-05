@@ -1,0 +1,1799 @@
+/Users/hoaidv/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+============================================================
+Product Scraping Orchestrator
+============================================================
+
+Loading categories from database...
+✓ Loaded 3 categories
+  - iPhones: 7 attributes
+  - Men's Clothing: 4 attributes
+  - Mirrorless Cameras: 10 attributes
+
+Websites: amazon, flipkart, newegg, craigslist
+
+⚠️  SAMPLE MODE: Scraping 5 products per website
+
+============================================================
+Scraping category: iPhones (ID: 704898)
+Required attributes: 7
+============================================================
+
+  Website: amazon
+      📋 Building search URL for category: iPhones
+      🏠 Visiting homepage to establish session...
+      → Fetching: https://www.amazon.com
+      ✓ Success (200) - Content length: 765348 bytes
+      🔍 Searching for products...
+      → Fetching: https://www.amazon.com/s?k=iPhones&i=electronics
+      ✓ Success (200) - Content length: 816183 bytes
+      📄 Page title: Amazon.com : iPhones
+      🔎 Looking for product containers...
+      → Method 1 (data-component-type): 24 containers
+      🔗 Extracting product URLs from 24 containers...
+         [1] ✓ Found product URL
+         [2] ✓ Found product URL
+         [3] ✓ Found product URL
+         [4] ✓ Found product URL
+         [5] ✓ Found product URL
+      ✓ Extracted 5 product URLs
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://www.amazon.com/Apple-iPhone-Version-256GB-Titanium/dp/B0DPDK3JVN/ref=sr_1_1?dib=eyJ2IjoiMSJ9
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Apple-iPhone-Version-256GB-Titanium/dp/B0DPDK3JVN/ref=sr_1_1?dib=eyJ2IjoiMSJ9
+      ✓ Success (200) - Content length: 1797635 bytes
+      📦 Extracting product info...
+         ASIN: B0DPDK3JVN
+         Title: Apple iPhone (Renewed Premium) 16 Pro Max, US Version, 256GB...
+         Price: $649333
+         Rating: 4.4
+         Reviews: 344
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Apple iPhone (Renewed Premium) 16 Pro Max, US Version, 256GB
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Apple-iPhone-Version-256GB-Titanium/dp/B0DPDK3JVN/ref=sr_1_1?dib=eyJ2IjoiMSJ9
+      ✓ Success (200) - Content length: 1901235 bytes
+      🏷️  Extracting attributes using config for iPhones on amazon...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✗ model: not found
+         ✓ storage: 256
+         ✓ color: Black
+         ✓ condition: Renewed
+         ✓ carrier: Unlocked
+      ✓ Extracted 5/6 attributes
+      📊 Attribute coverage: 5/7 (71.4%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • storage: 256
+         • color: Black
+         • condition: Renewed
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 5/7 attributes (71.4%)
+
+    ======================================================================
+    [2/5] Product URL: https://www.amazon.com/Apple-iPhone-15-Pro-Titanium/dp/B0CMYXFK3R/ref=sr_1_2?dib=eyJ2IjoiMSJ9.gPqQCK
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Apple-iPhone-15-Pro-Titanium/dp/B0CMYXFK3R/ref=sr_1_2?dib=eyJ2IjoiMSJ9.gPqQCK
+      ✓ Success (200) - Content length: 2084826 bytes
+      📦 Extracting product info...
+         ASIN: B0CMYXFK3R
+         Title: Apple iPhone 15 Pro, 256GB, Blue Titanium - Unlocked (Renewe...
+         Price: $649333
+         Rating: 4.1
+         Reviews: 1913
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Apple iPhone 15 Pro, 256GB, Blue Titanium - Unlocked (Renewe
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Apple-iPhone-15-Pro-Titanium/dp/B0CMYXFK3R/ref=sr_1_2?dib=eyJ2IjoiMSJ9.gPqQCK
+      ✓ Success (200) - Content length: 2070471 bytes
+      🏷️  Extracting attributes using config for iPhones on amazon...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 15
+         ✓ storage: 256
+         ✓ color: Blue
+         ✓ condition: Renewed
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 15
+         • storage: 256
+         • color: Blue
+         • condition: Renewed
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+    ======================================================================
+    [3/5] Product URL: https://www.amazon.com/Apple-iPhone-14-128GB-Midnight/dp/B0BN72FYFG/ref=sr_1_3?dib=eyJ2IjoiMSJ9.gPqQ
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Apple-iPhone-14-128GB-Midnight/dp/B0BN72FYFG/ref=sr_1_3?dib=eyJ2IjoiMSJ9.gPqQ
+      ✓ Success (200) - Content length: 1955842 bytes
+      📦 Extracting product info...
+         ASIN: B0BN72FYFG
+         Title: Apple iPhone 14 (Renewed), 128GB, Midnight - Unlocked...
+         Price: $2977081
+         Rating: 4.1
+         Reviews: 6740
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Apple iPhone 14 (Renewed), 128GB, Midnight - Unlocked
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Apple-iPhone-14-128GB-Midnight/dp/B0BN72FYFG/ref=sr_1_3?dib=eyJ2IjoiMSJ9.gPqQ
+      ✓ Success (200) - Content length: 1955481 bytes
+      🏷️  Extracting attributes using config for iPhones on amazon...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 14
+         ✓ storage: 128
+         ✓ color: Midnight
+         ✓ condition: Renewed
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 14
+         • storage: 128
+         • color: Midnight
+         • condition: Renewed
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+    ======================================================================
+    [4/5] Product URL: https://www.amazon.com/Apple-iPhone-14-128GB-Blue/dp/B0BN733951/ref=sr_1_4?dib=eyJ2IjoiMSJ9.gPqQCK0S
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Apple-iPhone-14-128GB-Blue/dp/B0BN733951/ref=sr_1_4?dib=eyJ2IjoiMSJ9.gPqQCK0S
+      ✓ Success (200) - Content length: 1960124 bytes
+      📦 Extracting product info...
+         ASIN: B0BN733951
+         Title: Apple iPhone 14 (Renewed), 128GB, Blue - Unlocked...
+         Price: $2977081
+         Rating: 4.1
+         Reviews: 6740
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Apple iPhone 14 (Renewed), 128GB, Blue - Unlocked
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Apple-iPhone-14-128GB-Blue/dp/B0BN733951/ref=sr_1_4?dib=eyJ2IjoiMSJ9.gPqQCK0S
+      ✓ Success (200) - Content length: 1959818 bytes
+      🏷️  Extracting attributes using config for iPhones on amazon...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 14
+         ✓ storage: 128
+         ✓ color: Blue
+         ✓ condition: Renewed
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 14
+         • storage: 128
+         • color: Blue
+         • condition: Renewed
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+    ======================================================================
+    [5/5] Product URL: https://www.amazon.com/Apple-iPhone-16-Pro-Max/dp/B0DHJ896RY/ref=sr_1_5?dib=eyJ2IjoiMSJ9.gPqQCK0Sbhv
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Apple-iPhone-16-Pro-Max/dp/B0DHJ896RY/ref=sr_1_5?dib=eyJ2IjoiMSJ9.gPqQCK0Sbhv
+      ✓ Success (200) - Content length: 1996096 bytes
+      📦 Extracting product info...
+         ASIN: B0DHJ896RY
+         Title: Apple iPhone 16 Pro Max, US Version, 256GB, Black Titanium -...
+         Price: $10826462
+         Rating: 4.4
+         Reviews: 817
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Apple iPhone 16 Pro Max, US Version, 256GB, Black Titanium -
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Apple-iPhone-16-Pro-Max/dp/B0DHJ896RY/ref=sr_1_5?dib=eyJ2IjoiMSJ9.gPqQCK0Sbhv
+      ✓ Success (200) - Content length: 1903089 bytes
+      🏷️  Extracting attributes using config for iPhones on amazon...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 16 Pro Max
+         ✓ storage: 256
+         ✓ color: Black
+         ✓ condition: Renewed
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 16 Pro Max
+         • storage: 256
+         • color: Black
+         • condition: Renewed
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+  Website: flipkart
+      → Fetching: https://www.flipkart.com/search?q=iPhones
+      ✓ Success (200) - Content length: 497529 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://www.flipkart.com/apple-iphone-16-teal-128-gb/p/itmce4bb3f55cc2f?pid=MOBH4DQFSY9ETDUU&lid=LST
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-teal-128-gb/p/itmce4bb3f55cc2f?pid=MOBH4DQFSY9ETDUU&lid=LST
+      ✓ Success (200) - Content length: 718015 bytes
+      ✓ Basic info extracted: Apple iPhone 16 (Teal, 128 GB)
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-teal-128-gb/p/itmce4bb3f55cc2f?pid=MOBH4DQFSY9ETDUU&lid=LST
+      ✓ Success (200) - Content length: 719116 bytes
+      🏷️  Extracting attributes using config for iPhones on flipkart...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 16
+         ✓ storage: 128
+         ✗ ram: not found
+         ✓ color: Teal
+         ✗ screen_size: not found
+      ✓ Extracted 4/6 attributes
+      📊 Attribute coverage: 4/7 (57.1%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 16
+         • storage: 128
+         • color: Teal
+
+      ✅ SUCCESS: 4/7 attributes (57.1%)
+
+    ======================================================================
+    [2/5] Product URL: https://www.flipkart.com/apple-iphone-16-black-256-gb/p/itm86da1977dcdf1?pid=MOBH4DQFZCJJXUFG&lid=LS
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-black-256-gb/p/itm86da1977dcdf1?pid=MOBH4DQFZCJJXUFG&lid=LS
+      ✓ Success (200) - Content length: 719160 bytes
+      ✓ Basic info extracted: Apple iPhone 16 (Black, 256 GB)
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-black-256-gb/p/itm86da1977dcdf1?pid=MOBH4DQFZCJJXUFG&lid=LS
+      ✓ Success (200) - Content length: 719279 bytes
+      🏷️  Extracting attributes using config for iPhones on flipkart...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 16
+         ✓ storage: 256
+         ✗ ram: not found
+         ✓ color: Black
+         ✗ screen_size: not found
+      ✓ Extracted 4/6 attributes
+      📊 Attribute coverage: 4/7 (57.1%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 16
+         • storage: 256
+         • color: Black
+
+      ✅ SUCCESS: 4/7 attributes (57.1%)
+
+    ======================================================================
+    [3/5] Product URL: https://www.flipkart.com/apple-iphone-16-pro-max-white-titanium-256-gb/p/itm78c52ab1c6488?pid=MOBH4J
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-pro-max-white-titanium-256-gb/p/itm78c52ab1c6488?pid=MOBH4J
+      ✓ Success (200) - Content length: 642005 bytes
+      ✓ Basic info extracted: Apple iPhone 16 Pro Max (White Titanium, 256 GB)
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-pro-max-white-titanium-256-gb/p/itm78c52ab1c6488?pid=MOBH4J
+      ✓ Success (200) - Content length: 642336 bytes
+      🏷️  Extracting attributes using config for iPhones on flipkart...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 16 Pro Max
+         ✓ storage: 256
+         ✗ ram: not found
+         ✓ color: White Titanium
+         ✗ screen_size: not found
+      ✓ Extracted 4/6 attributes
+      📊 Attribute coverage: 4/7 (57.1%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 16 Pro Max
+         • storage: 256
+         • color: White Titanium
+
+      ✅ SUCCESS: 4/7 attributes (57.1%)
+
+    ======================================================================
+    [4/5] Product URL: https://www.flipkart.com/apple-iphone-16-black-128-gb/p/itmb07d67f995271?pid=MOBH4DQFG8NKFRDY&lid=LS
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-black-128-gb/p/itmb07d67f995271?pid=MOBH4DQFG8NKFRDY&lid=LS
+      ✓ Success (200) - Content length: 718631 bytes
+      ✓ Basic info extracted: Apple iPhone 16 (Black, 128 GB)
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-black-128-gb/p/itmb07d67f995271?pid=MOBH4DQFG8NKFRDY&lid=LS
+      ✓ Success (200) - Content length: 718214 bytes
+      🏷️  Extracting attributes using config for iPhones on flipkart...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 16
+         ✓ storage: 128
+         ✗ ram: not found
+         ✓ color: Black
+         ✗ screen_size: not found
+      ✓ Extracted 4/6 attributes
+      📊 Attribute coverage: 4/7 (57.1%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 16
+         • storage: 128
+         • color: Black
+
+      ✅ SUCCESS: 4/7 attributes (57.1%)
+
+    ======================================================================
+    [5/5] Product URL: https://www.flipkart.com/apple-iphone-16-pink-128-gb/p/itmc2e910b4d0b1c?pid=MOBH4DQFWJVDRSHM&lid=LST
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-pink-128-gb/p/itmc2e910b4d0b1c?pid=MOBH4DQFWJVDRSHM&lid=LST
+      ✓ Success (200) - Content length: 715499 bytes
+      ✓ Basic info extracted: Apple iPhone 16 (Pink, 128 GB)
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/apple-iphone-16-pink-128-gb/p/itmc2e910b4d0b1c?pid=MOBH4DQFWJVDRSHM&lid=LST
+      ✓ Success (200) - Content length: 716350 bytes
+      🏷️  Extracting attributes using config for iPhones on flipkart...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 16
+         ✓ storage: 128
+         ✗ ram: not found
+         ✓ color: Pink
+         ✗ screen_size: not found
+      ✓ Extracted 4/6 attributes
+      📊 Attribute coverage: 4/7 (57.1%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 16
+         • storage: 128
+         • color: Pink
+
+      ✅ SUCCESS: 4/7 attributes (57.1%)
+
+  Website: newegg
+      → Fetching: https://www.newegg.com
+      ✓ Success (200) - Content length: 652271 bytes
+      → Fetching: https://www.newegg.com/p/pl?d=iPhones
+      ✓ Success (200) - Content length: 615497 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://www.newegg.com/p/23B-000A-026Y3
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/23B-000A-026Y3
+      ✓ Success (200) - Content length: 189798 bytes
+      ✓ Basic info extracted: Apple iPhone 14 Plus - 128GB - Midnight - Fully Unlocked - E
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/23B-000A-026Y3
+      ✓ Success (200) - Content length: 189798 bytes
+      🏷️  Extracting attributes using config for iPhones on newegg...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 14 Plus
+         ✓ storage: 128
+         ✓ color: Midnight
+         ✓ condition: New
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 14 Plus
+         • storage: 128
+         • color: Midnight
+         • condition: New
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+    ======================================================================
+    [2/5] Product URL: https://www.newegg.com/p/23B-000A-028M9
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/23B-000A-028M9
+      ✓ Success (200) - Content length: 188569 bytes
+      ✓ Basic info extracted: Apple iPhone 15 Plus - 256GB - Pink - Fully Unlocked - Premi
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/23B-000A-028M9
+      ✓ Success (200) - Content length: 188569 bytes
+      🏷️  Extracting attributes using config for iPhones on newegg...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 15 Plus
+         ✓ storage: 256
+         ✓ color: Pink
+         ✓ condition: New
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 15 Plus
+         • storage: 256
+         • color: Pink
+         • condition: New
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+    ======================================================================
+    [3/5] Product URL: https://www.newegg.com/p/23B-000A-02765
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/23B-000A-02765
+      ✓ Success (200) - Content length: 188724 bytes
+      ✓ Basic info extracted: Apple iPhone 14 Pro - 128GB - Space Black - Fully Unlocked -
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/23B-000A-02765
+      ✓ Success (200) - Content length: 188724 bytes
+      🏷️  Extracting attributes using config for iPhones on newegg...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 14
+         ✓ storage: 128
+         ✓ color: Black
+         ✓ condition: New
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 14
+         • storage: 128
+         • color: Black
+         • condition: New
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+    ======================================================================
+    [4/5] Product URL: https://www.newegg.com/p/23B-000A-027J2
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/23B-000A-027J2
+      ✓ Success (200) - Content length: 189246 bytes
+      ✓ Basic info extracted: Apple iPhone 15 Pro Max - 1TB - Black Titanium - Fully Unloc
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/23B-000A-027J2
+      ✓ Success (200) - Content length: 189246 bytes
+      🏷️  Extracting attributes using config for iPhones on newegg...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 15 Pro Max
+         ✗ storage: not found
+         ✓ color: Black
+         ✓ condition: New
+         ✓ carrier: Unlocked
+      ✓ Extracted 5/6 attributes
+      📊 Attribute coverage: 5/7 (71.4%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 15 Pro Max
+         • color: Black
+         • condition: New
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 5/7 attributes (71.4%)
+
+    ======================================================================
+    [5/5] Product URL: https://www.newegg.com/p/23B-000A-027V1
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/23B-000A-027V1
+      ✓ Success (200) - Content length: 190524 bytes
+      ✓ Basic info extracted: Apple iPhone 15 Pro Max - 512GB - White Titanium - Fully Unl
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/23B-000A-027V1
+      ✓ Success (200) - Content length: 190524 bytes
+      🏷️  Extracting attributes using config for iPhones on newegg...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✓ model: iPhone 15 Pro Max
+         ✓ storage: 512
+         ✓ color: White
+         ✓ condition: New
+         ✓ carrier: Unlocked
+      ✓ Extracted 6/6 attributes
+      📊 Attribute coverage: 6/7 (85.7%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+         • model: iPhone 15 Pro Max
+         • storage: 512
+         • color: White
+         • condition: New
+         • carrier: Unlocked
+
+      ✅ SUCCESS: 6/7 attributes (85.7%)
+
+  Website: craigslist
+      → Fetching: https://sfbay.craigslist.org/search/sss?query=iPhones&sort=rel
+      ✓ Success (200) - Content length: 475590 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://sfbay.craigslist.org/sby/ele/d/santa-clara-battery-case-for-apple/7899468219.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/sby/ele/d/santa-clara-battery-case-for-apple/7899468219.html
+      ✓ Success (200) - Content length: 20798 bytes
+      ✓ Basic info extracted: Battery Case, for Apple iPhones, 5.5"
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/sby/ele/d/santa-clara-battery-case-for-apple/7899468219.html
+      ✓ Success (200) - Content length: 20798 bytes
+      🏷️  Extracting attributes using config for iPhones on craigslist...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✗ model: not found
+         ✗ storage: not found
+         ✗ color: not found
+         ✗ condition: not found
+         ✗ carrier: not found
+      ✓ Extracted 1/6 attributes
+      📊 Attribute coverage: 1/7 (14.3%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+
+      ✅ SUCCESS: 1/7 attributes (14.3%)
+
+    ======================================================================
+    [2/5] Product URL: https://sfbay.craigslist.org/eby/hsh/d/pleasanton-screen-protectors-for-iphones/7899800319.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/eby/hsh/d/pleasanton-screen-protectors-for-iphones/7899800319.html
+      ✓ Success (200) - Content length: 19150 bytes
+      ✓ Basic info extracted: Screen protectors for iphones
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/eby/hsh/d/pleasanton-screen-protectors-for-iphones/7899800319.html
+      ✓ Success (200) - Content length: 19150 bytes
+      🏷️  Extracting attributes using config for iPhones on craigslist...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✗ model: not found
+         ✗ storage: not found
+         ✗ color: not found
+         ✗ condition: not found
+         ✗ carrier: not found
+      ✓ Extracted 1/6 attributes
+      📊 Attribute coverage: 1/7 (14.3%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+
+      ✅ SUCCESS: 1/7 attributes (14.3%)
+
+    ======================================================================
+    [3/5] Product URL: https://sfbay.craigslist.org/pen/mob/d/los-altos-iphones/7882048613.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/pen/mob/d/los-altos-iphones/7882048613.html
+      ✓ Success (200) - Content length: 21527 bytes
+      ✓ Basic info extracted: iPhones
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/pen/mob/d/los-altos-iphones/7882048613.html
+      ✓ Success (200) - Content length: 21527 bytes
+      🏷️  Extracting attributes using config for iPhones on craigslist...
+      → Configured attributes: 6
+         ✓ brand: iPhone
+         ✓ model: 7 
+         ✗ storage: not found
+         ✗ color: not found
+         ✗ condition: not found
+         ✗ carrier: not found
+      ✓ Extracted 2/6 attributes
+      📊 Attribute coverage: 2/7 (28.6%)
+
+      📋 Extracted Attributes:
+         • brand: iPhone
+         • model: 7 
+
+      ✅ SUCCESS: 2/7 attributes (28.6%)
+
+    ======================================================================
+    [4/5] Product URL: https://sfbay.craigslist.org/sby/mob/d/san-jose-iphones-11-64g-unlock-99/7880581706.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/sby/mob/d/san-jose-iphones-11-64g-unlock-99/7880581706.html
+      ✓ Success (200) - Content length: 19137 bytes
+      ✓ Basic info extracted: iPhones 11 64G unlock 99% battery
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/sby/mob/d/san-jose-iphones-11-64g-unlock-99/7880581706.html
+      ✓ Success (200) - Content length: 19137 bytes
+      🏷️  Extracting attributes using config for iPhones on craigslist...
+      → Configured attributes: 6
+         ✓ brand: iPhone
+         ✓ model: 11 
+         ✓ storage: 64
+         ✗ color: not found
+         ✗ condition: not found
+         ✗ carrier: not found
+      ✓ Extracted 3/6 attributes
+      📊 Attribute coverage: 3/7 (42.9%)
+
+      📋 Extracted Attributes:
+         • brand: iPhone
+         • model: 11 
+         • storage: 64
+
+      ✅ SUCCESS: 3/7 attributes (42.9%)
+
+    ======================================================================
+    [5/5] Product URL: https://sfbay.craigslist.org/sby/wan/d/san-jose-wanted-cellphones-iphones/7874438067.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/sby/wan/d/san-jose-wanted-cellphones-iphones/7874438067.html
+      ✓ Success (200) - Content length: 16526 bytes
+      ✓ Basic info extracted: WANTED CELLPHONES, IPHONES, SAMSUNG ETC
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/sby/wan/d/san-jose-wanted-cellphones-iphones/7874438067.html
+      ✓ Success (200) - Content length: 16526 bytes
+      🏷️  Extracting attributes using config for iPhones on craigslist...
+      → Configured attributes: 6
+         ✓ brand: Apple
+         ✗ model: not found
+         ✗ storage: not found
+         ✗ color: not found
+         ✗ condition: not found
+         ✗ carrier: not found
+      ✓ Extracted 1/6 attributes
+      📊 Attribute coverage: 1/7 (14.3%)
+
+      📋 Extracted Attributes:
+         • brand: Apple
+
+      ✅ SUCCESS: 1/7 attributes (14.3%)
+
+============================================================
+Scraping category: Men's Clothing (ID: 412555)
+Required attributes: 4
+============================================================
+
+  Website: amazon
+      📋 Building search URL for category: Men's Clothing
+      🏠 Visiting homepage to establish session...
+      → Fetching: https://www.amazon.com
+      ✓ Success (200) - Content length: 765356 bytes
+      🔍 Searching for products...
+      → Fetching: https://www.amazon.com/s?k=Men%27s+Clothing&i=electronics
+      ✓ Success (200) - Content length: 287768 bytes
+      📄 Page title: Amazon.com : Men's Clothing
+      🔎 Looking for product containers...
+      → Method 1 (data-component-type): 0 containers
+      → Method 2 (s-result-item): 0 containers
+      → Method 3 (data-asin): 0 containers
+      ⚠ No product containers found - page structure may have changed
+      🔗 Extracting product URLs from 0 containers...
+      ✓ Extracted 0 product URLs
+    ✗ No products found
+
+  Website: flipkart
+      → Fetching: https://www.flipkart.com/search?q=Men%27s+Clothing
+      ✓ Success (200) - Content length: 1535722 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://www.flipkart.com/mildin-men-striped-formal-grey-shirt/p/itm76b19011532d7?pid=SHTH9XSFHQGYGHX
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/mildin-men-striped-formal-grey-shirt/p/itm76b19011532d7?pid=SHTH9XSFHQGYGHX
+      ✓ Success (200) - Content length: 614119 bytes
+      ✓ Basic info extracted: MILDIN Men Regular Fit Striped Spread Collar Formal Shirt
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/mildin-men-striped-formal-grey-shirt/p/itm76b19011532d7?pid=SHTH9XSFHQGYGHX
+      ✓ Success (200) - Content length: 614096 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on flipkart...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✓ clothing_type: Shirt
+         ✗ size: not found
+         ✗ color: not found
+         ✗ material: not found
+      ✓ Extracted 1/5 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • clothing_type: Shirt
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [2/5] Product URL: https://www.flipkart.com/pesado-slim-fit-men-black-trousers/p/itm90ae32ac542d5?pid=TROGMKA9XCEZ84QH&
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/pesado-slim-fit-men-black-trousers/p/itm90ae32ac542d5?pid=TROGMKA9XCEZ84QH&
+      ✓ Success (200) - Content length: 577004 bytes
+      ✓ Basic info extracted: pesado Men Slim Fit Black Cotton Blend Trousers
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/pesado-slim-fit-men-black-trousers/p/itm90ae32ac542d5?pid=TROGMKA9XCEZ84QH&
+      ✓ Success (200) - Content length: 613859 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on flipkart...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✗ size: not found
+         ✓ color: Black
+         ✓ material: Cotton
+      ✓ Extracted 2/5 attributes
+      📊 Attribute coverage: 2/4 (50.0%)
+
+      📋 Extracted Attributes:
+         • color: Black
+         • material: Cotton
+
+      ✅ SUCCESS: 2/4 attributes (50.0%)
+
+    ======================================================================
+    [3/5] Product URL: https://www.flipkart.com/oswal-inner-men-thermal-set-winter-wear-warmer-top-payjama-pyjama/p/itmf7ce
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/oswal-inner-men-thermal-set-winter-wear-warmer-top-payjama-pyjama/p/itmf7ce
+      ✓ Success (200) - Content length: 514146 bytes
+      ✓ Basic info extracted: OSWAL INNER Oswal Men Thermal Set Winter Wear Warmer Inner W
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/oswal-inner-men-thermal-set-winter-wear-warmer-top-payjama-pyjama/p/itmf7ce
+      ✓ Success (200) - Content length: 514145 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on flipkart...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✗ size: not found
+         ✗ color: not found
+         ✗ material: not found
+      ✓ Extracted 0/5 attributes
+      📊 Attribute coverage: 0/4 (0.0%)
+
+      📋 Extracted Attributes:
+
+      ✅ SUCCESS: 0/4 attributes (0.0%)
+
+    ======================================================================
+    [4/5] Product URL: https://www.flipkart.com/vebnor-men-solid-casual-maroon-shirt/p/itm888dc158ad656?pid=SHTFXW9K9688TXC
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/vebnor-men-solid-casual-maroon-shirt/p/itm888dc158ad656?pid=SHTFXW9K9688TXC
+      ✓ Success (200) - Content length: 807096 bytes
+      ✓ Basic info extracted: VeBNoR Men Regular Fit Solid Spread Collar Casual Shirt
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/vebnor-men-solid-casual-maroon-shirt/p/itm888dc158ad656?pid=SHTFXW9K9688TXC
+      ✓ Success (200) - Content length: 807101 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on flipkart...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✓ clothing_type: Shirt
+         ✗ size: not found
+         ✗ color: not found
+         ✗ material: not found
+      ✓ Extracted 1/5 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • clothing_type: Shirt
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [5/5] Product URL: https://www.flipkart.com/metronaut-men-solid-casual-orange-shirt/p/itm5ae44659a4854?pid=SHTH8PSHZXYN
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/metronaut-men-solid-casual-orange-shirt/p/itm5ae44659a4854?pid=SHTH8PSHZXYN
+      ✓ Success (200) - Content length: 513878 bytes
+      ✓ Basic info extracted: METRONAUT Men Regular Fit Solid Spread Collar Casual Shirt
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/metronaut-men-solid-casual-orange-shirt/p/itm5ae44659a4854?pid=SHTH8PSHZXYN
+      ✓ Success (200) - Content length: 513876 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on flipkart...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✓ clothing_type: Shirt
+         ✗ size: not found
+         ✗ color: not found
+         ✗ material: not found
+      ✓ Extracted 1/5 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • clothing_type: Shirt
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+  Website: newegg
+      → Fetching: https://www.newegg.com
+      ✓ Success (200) - Content length: 652284 bytes
+      → Fetching: https://www.newegg.com/p/pl?d=Men%27s+Clothing
+      ✓ Success (200) - Content length: 712190 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://www.newegg.com/p/3C6-05VP-00TV3
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/3C6-05VP-00TV3
+      ✓ Success (200) - Content length: 175032 bytes
+      ✓ Basic info extracted: Grey Backpack for Men Women, Backpack for School, School Bac
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/3C6-05VP-00TV3
+      ✓ Success (200) - Content length: 175032 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on newegg...
+      → Configured attributes: 4
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✗ size: not found
+         ✓ color: Grey
+      ✓ Extracted 1/4 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • color: Grey
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [2/5] Product URL: https://www.newegg.com/p/3C6-01ZY-010B9
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/3C6-01ZY-010B9
+      ✓ Success (200) - Content length: 176020 bytes
+      ✓ Basic info extracted: Backpack for Men Slim & Expandable Travel Laptop Backpack wi
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/3C6-01ZY-010B9
+      ✓ Success (200) - Content length: 176020 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on newegg...
+      → Configured attributes: 4
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✗ size: not found
+         ✓ color: Black
+      ✓ Extracted 1/4 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • color: Black
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [3/5] Product URL: https://www.newegg.com/p/2YT-02UM-00017
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/2YT-02UM-00017
+      ✓ Success (200) - Content length: 177760 bytes
+      ✓ Basic info extracted: Heated Fleece Jacket for Men, Heated Sweatshirt with 7.4V 16
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/2YT-02UM-00017
+      ✓ Success (200) - Content length: 177760 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on newegg...
+      → Configured attributes: 4
+         ✗ brand: not found
+         ✓ clothing_type: Jacket
+         ✗ size: not found
+         ✓ color: Black
+      ✓ Extracted 2/4 attributes
+      📊 Attribute coverage: 2/4 (50.0%)
+
+      📋 Extracted Attributes:
+         • clothing_type: Jacket
+         • color: Black
+
+      ✅ SUCCESS: 2/4 attributes (50.0%)
+
+    ======================================================================
+    [4/5] Product URL: https://www.newegg.com/p/3C6-005Y-010N7
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/3C6-005Y-010N7
+      ✓ Success (200) - Content length: 210925 bytes
+      ✓ Basic info extracted: Classic Backpack for Men Women, School Backpack for Girls Bo
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/3C6-005Y-010N7
+      ✓ Success (200) - Content length: 220908 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on newegg...
+      → Configured attributes: 4
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✗ size: not found
+         ✓ color: Grey
+      ✓ Extracted 1/4 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • color: Grey
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [5/5] Product URL: https://www.newegg.com/p/2YT-02UM-00015
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/2YT-02UM-00015
+      ✓ Success (200) - Content length: 177763 bytes
+      ✓ Basic info extracted: Heated Fleece Jacket for Men, Heated Sweatshirt with 7.4V 16
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/2YT-02UM-00015
+      ✓ Success (200) - Content length: 177763 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on newegg...
+      → Configured attributes: 4
+         ✗ brand: not found
+         ✓ clothing_type: Jacket
+         ✗ size: not found
+         ✓ color: Black
+      ✓ Extracted 2/4 attributes
+      📊 Attribute coverage: 2/4 (50.0%)
+
+      📋 Extracted Attributes:
+         • clothing_type: Jacket
+         • color: Black
+
+      ✅ SUCCESS: 2/4 attributes (50.0%)
+
+  Website: craigslist
+      → Fetching: https://sfbay.craigslist.org/search/sss?query=Men%27s+Clothing&sort=rel
+      ✓ Success (200) - Content length: 517231 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://sfbay.craigslist.org/eby/clo/d/walnut-creek-mens-items-zaraclothing/7868389729.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/eby/clo/d/walnut-creek-mens-items-zaraclothing/7868389729.html
+      ✓ Success (200) - Content length: 19966 bytes
+      ✓ Basic info extracted: Men’s 3 items “Zara”clothing, size S slim
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/eby/clo/d/walnut-creek-mens-items-zaraclothing/7868389729.html
+      ✓ Success (200) - Content length: 19966 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on craigslist...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✓ size: s
+         ✗ color: not found
+         ✗ condition: not found
+      ✓ Extracted 1/5 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • size: s
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [2/5] Product URL: https://sfbay.craigslist.org/pen/clo/d/palo-alto-mens-xl-clothing/7890432002.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/pen/clo/d/palo-alto-mens-xl-clothing/7890432002.html
+      ✓ Success (200) - Content length: 34724 bytes
+      ✓ Basic info extracted: Men’s XL clothing
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/pen/clo/d/palo-alto-mens-xl-clothing/7890432002.html
+      ✓ Success (200) - Content length: 34724 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on craigslist...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✓ size: s
+         ✗ color: not found
+         ✗ condition: not found
+      ✓ Extracted 1/5 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • size: s
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [3/5] Product URL: https://sfbay.craigslist.org/pen/clo/d/belmont-mens-new-shirts-and-many-other/7899698539.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/pen/clo/d/belmont-mens-new-shirts-and-many-other/7899698539.html
+      ✓ Success (200) - Content length: 23573 bytes
+      ✓ Basic info extracted: Men's new shirts M 151/2 32/33 and Many other men clothing
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/pen/clo/d/belmont-mens-new-shirts-and-many-other/7899698539.html
+      ✓ Success (200) - Content length: 23573 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on craigslist...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✓ clothing_type: shirt
+         ✓ size: s
+         ✗ color: not found
+         ✓ condition: new
+      ✓ Extracted 3/5 attributes
+      📊 Attribute coverage: 3/4 (75.0%)
+
+      📋 Extracted Attributes:
+         • clothing_type: shirt
+         • size: s
+         • condition: new
+
+      ✅ SUCCESS: 3/4 attributes (75.0%)
+
+    ======================================================================
+    [4/5] Product URL: https://sfbay.craigslist.org/sby/clo/d/sunnyvale-mens-clothing/7899261525.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/sby/clo/d/sunnyvale-mens-clothing/7899261525.html
+      ✓ Success (200) - Content length: 36816 bytes
+      ✓ Basic info extracted: Men's clothing
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/sby/clo/d/sunnyvale-mens-clothing/7899261525.html
+      ✓ Success (200) - Content length: 36816 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on craigslist...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✗ clothing_type: not found
+         ✓ size: s
+         ✗ color: not found
+         ✗ condition: not found
+      ✓ Extracted 1/5 attributes
+      📊 Attribute coverage: 1/4 (25.0%)
+
+      📋 Extracted Attributes:
+         • size: s
+
+      ✅ SUCCESS: 1/4 attributes (25.0%)
+
+    ======================================================================
+    [5/5] Product URL: https://sfbay.craigslist.org/pen/clo/d/palo-alto-mens-xl-clothing-pants-short/7890528975.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/pen/clo/d/palo-alto-mens-xl-clothing-pants-short/7890528975.html
+      ✓ Success (200) - Content length: 25764 bytes
+      ✓ Basic info extracted: Men’s Xl clothing Pants, Short & a Pullover
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/pen/clo/d/palo-alto-mens-xl-clothing-pants-short/7890528975.html
+      ✓ Success (200) - Content length: 25764 bytes
+      🏷️  Extracting attributes using config for Men's Clothing on craigslist...
+      → Configured attributes: 5
+         ✗ brand: not found
+         ✓ clothing_type: Pants
+         ✓ size: s
+         ✗ color: not found
+         ✗ condition: not found
+      ✓ Extracted 2/5 attributes
+      📊 Attribute coverage: 2/4 (50.0%)
+
+      📋 Extracted Attributes:
+         • clothing_type: Pants
+         • size: s
+
+      ✅ SUCCESS: 2/4 attributes (50.0%)
+
+============================================================
+Scraping category: Mirrorless Cameras (ID: 366754)
+Required attributes: 10
+============================================================
+
+  Website: amazon
+      📋 Building search URL for category: Mirrorless Cameras
+      🏠 Visiting homepage to establish session...
+      → Fetching: https://www.amazon.com
+      ✓ Success (200) - Content length: 764540 bytes
+      🔍 Searching for products...
+      → Fetching: https://www.amazon.com/s?k=Mirrorless+Cameras&i=electronics
+      ✓ Success (200) - Content length: 1470952 bytes
+      📄 Page title: Amazon.com : Mirrorless Cameras
+      🔎 Looking for product containers...
+      → Method 1 (data-component-type): 30 containers
+      🔗 Extracting product URLs from 30 containers...
+         [1] ✗ Skipped non-product URL: https://www.amazon.com/sspa/click?ie=UTF8&spc=MToyNTgwMzM2OT
+         [2] ✓ Found product URL
+         [3] ✓ Found product URL
+         [4] ✓ Found product URL
+         [5] ✓ Found product URL
+      ✓ Extracted 4 product URLs
+    Found 4 product URLs
+
+    ======================================================================
+    [1/4] Product URL: https://www.amazon.com/Canon-RF-S18-45mm-Mirrorless-Continuous-Lightweight/dp/B0C5PGRP7V/ref=sr_1_2?
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Canon-RF-S18-45mm-Mirrorless-Continuous-Lightweight/dp/B0C5PGRP7V/ref=sr_1_2?
+      ✓ Success (200) - Content length: 2417293 bytes
+      📦 Extracting product info...
+         ASIN: B0C5PGRP7V
+         Title: Canon EOS R100 Mirrorless Camera RF-S18-45mm F4.5-6.3 is STM...
+         Price: $719707
+         Rating: 4.5
+         Reviews: 759
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Canon EOS R100 Mirrorless Camera RF-S18-45mm F4.5-6.3 is STM
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Canon-RF-S18-45mm-Mirrorless-Continuous-Lightweight/dp/B0C5PGRP7V/ref=sr_1_2?
+      ✓ Success (200) - Content length: 2414421 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on amazon...
+      → Configured attributes: 8
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✓ sensor_type: APS-C
+         ✓ video_capability: 4K
+         ✓ lens_mount: RF Mount
+         ✓ kit_type: Kit
+         ✓ color: Black
+      ✓ Extracted 7/8 attributes
+      📊 Attribute coverage: 7/10 (70.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+         • sensor_type: APS-C
+         • video_capability: 4K
+         • lens_mount: RF Mount
+         • kit_type: Kit
+         • color: Black
+
+      ✅ SUCCESS: 7/10 attributes (70.0%)
+
+    ======================================================================
+    [2/4] Product URL: https://www.amazon.com/Canon-Mirrorless-RF-S18-45mm-Smartphone-Connection/dp/B0BTTV6CT1/ref=sr_1_3?d
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Canon-Mirrorless-RF-S18-45mm-Smartphone-Connection/dp/B0BTTV6CT1/ref=sr_1_3?d
+      ✓ Success (200) - Content length: 2327017 bytes
+      📦 Extracting product info...
+         ASIN: B0BTTV6CT1
+         Title: Canon EOS R50 Mirrorless Camera RF-S18-45mm F4.5-6.3 is STM ...
+         Price: $21061640
+         Rating: 4.7
+         Reviews: 1624
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Canon EOS R50 Mirrorless Camera RF-S18-45mm F4.5-6.3 is STM 
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Canon-Mirrorless-RF-S18-45mm-Smartphone-Connection/dp/B0BTTV6CT1/ref=sr_1_3?d
+      ✓ Success (200) - Content length: 2329432 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on amazon...
+      → Configured attributes: 8
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✓ sensor_type: APS-C
+         ✓ video_capability: 4K
+         ✓ lens_mount: RF Mount
+         ✓ kit_type: Kit
+         ✓ color: Black
+      ✓ Extracted 7/8 attributes
+      📊 Attribute coverage: 7/10 (70.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+         • sensor_type: APS-C
+         • video_capability: 4K
+         • lens_mount: RF Mount
+         • kit_type: Kit
+         • color: Black
+
+      ✅ SUCCESS: 7/10 attributes (70.0%)
+
+    ======================================================================
+    [3/4] Product URL: https://www.amazon.com/Sony-Full-frame-Mirrorless-Interchangeable-28-70mm/dp/B09JZRWRJN/ref=sr_1_4?d
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Sony-Full-frame-Mirrorless-Interchangeable-28-70mm/dp/B09JZRWRJN/ref=sr_1_4?d
+      ✓ Success (200) - Content length: 2171912 bytes
+      📦 Extracting product info...
+         ASIN: B09JZRWRJN
+         Title: Sony Alpha 7 IV Full-frame Mirrorless Interchangeable Lens C...
+         Price: $57939280
+         Rating: 4.6
+         Reviews: 1064
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Sony Alpha 7 IV Full-frame Mirrorless Interchangeable Lens C
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Sony-Full-frame-Mirrorless-Interchangeable-28-70mm/dp/B09JZRWRJN/ref=sr_1_4?d
+      ✓ Success (200) - Content length: 2218959 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on amazon...
+      → Configured attributes: 8
+         ✓ brand: Sony
+         ✓ model: Alpha
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ lens_mount: not found
+         ✓ kit_type: Kit
+         ✗ color: not found
+      ✓ Extracted 3/8 attributes
+      📊 Attribute coverage: 3/10 (30.0%)
+
+      📋 Extracted Attributes:
+         • brand: Sony
+         • model: Alpha
+         • kit_type: Kit
+
+      ✅ SUCCESS: 3/10 attributes (30.0%)
+
+    ======================================================================
+    [4/4] Product URL: https://www.amazon.com/Canon-Rebel-T7-18-55mm-II/dp/B07C2Z21X5/ref=sr_1_5?dib=eyJ2IjoiMSJ9.amTHVNEE9
+    ======================================================================
+
+      🔍 Scraping product from amazon...
+      → Fetching: https://www.amazon.com/Canon-Rebel-T7-18-55mm-II/dp/B07C2Z21X5/ref=sr_1_5?dib=eyJ2IjoiMSJ9.amTHVNEE9
+      ✓ Success (200) - Content length: 2583435 bytes
+      📦 Extracting product info...
+         ASIN: B07C2Z21X5
+         Title: Canon EOS Rebel T7 DSLR Camera with 18-55mm Lens | Built-in ...
+         Price: $13944440
+         Rating: 4.6
+         Reviews: 8204
+         Image: ✓
+      ✓ Product info extracted
+      ✓ Basic info extracted: Canon EOS Rebel T7 DSLR Camera with 18-55mm Lens | Built-in 
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.amazon.com/Canon-Rebel-T7-18-55mm-II/dp/B07C2Z21X5/ref=sr_1_5?dib=eyJ2IjoiMSJ9.amTHVNEE9
+      ✓ Success (200) - Content length: 2587879 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on amazon...
+      → Configured attributes: 8
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✓ megapixels: 24.1
+         ✗ sensor_type: not found
+         ✓ video_capability: Full HD
+         ✗ lens_mount: not found
+         ✗ kit_type: not found
+         ✗ color: not found
+      ✓ Extracted 4/8 attributes
+      📊 Attribute coverage: 4/10 (40.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+         • megapixels: 24.1
+         • video_capability: Full HD
+
+      ✅ SUCCESS: 4/10 attributes (40.0%)
+
+  Website: flipkart
+      → Fetching: https://www.flipkart.com/search?q=Mirrorless+Cameras
+      ✓ Success (200) - Content length: 516288 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://www.flipkart.com/sony-alpha-ilce-6600m-aps-c-mirrorless-camera-18-135-mm-zoom-lens-featuring
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/sony-alpha-ilce-6600m-aps-c-mirrorless-camera-18-135-mm-zoom-lens-featuring
+      ✓ Success (200) - Content length: 704380 bytes
+      ✓ Basic info extracted: SONY Alpha ILCE-6600M APS-C Mirrorless Camera with 18-135 mm
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/sony-alpha-ilce-6600m-aps-c-mirrorless-camera-18-135-mm-zoom-lens-featuring
+      ✓ Success (200) - Content length: 704451 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on flipkart...
+      → Configured attributes: 6
+         ✓ brand: SONY
+         ✓ model: Alpha
+         ✗ megapixels: not found
+         ✓ sensor_type: APS-C
+         ✓ video_capability: 4K
+         ✗ kit_type: not found
+      ✓ Extracted 4/6 attributes
+      📊 Attribute coverage: 4/10 (40.0%)
+
+      📋 Extracted Attributes:
+         • brand: SONY
+         • model: Alpha
+         • sensor_type: APS-C
+         • video_capability: 4K
+
+      ✅ SUCCESS: 4/10 attributes (40.0%)
+
+    ======================================================================
+    [2/5] Product URL: https://www.flipkart.com/sony-alpha-ilce-6600-aps-c-mirrorless-camera-body-only-featuring-eye-af-4k-
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/sony-alpha-ilce-6600-aps-c-mirrorless-camera-body-only-featuring-eye-af-4k-
+      ✓ Success (200) - Content length: 705578 bytes
+      ✓ Basic info extracted: SONY Alpha ILCE-6600 APS-C Mirrorless Camera Body Only Featu
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/sony-alpha-ilce-6600-aps-c-mirrorless-camera-body-only-featuring-eye-af-4k-
+      ✓ Success (200) - Content length: 704434 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on flipkart...
+      → Configured attributes: 6
+         ✓ brand: SONY
+         ✓ model: Alpha
+         ✗ megapixels: not found
+         ✓ sensor_type: APS-C
+         ✓ video_capability: 4K
+         ✓ kit_type: Body Only
+      ✓ Extracted 5/6 attributes
+      📊 Attribute coverage: 5/10 (50.0%)
+
+      📋 Extracted Attributes:
+         • brand: SONY
+         • model: Alpha
+         • sensor_type: APS-C
+         • video_capability: 4K
+         • kit_type: Body Only
+
+      ✅ SUCCESS: 5/10 attributes (50.0%)
+
+    ======================================================================
+    [3/5] Product URL: https://www.flipkart.com/canon-r100-mirrorless-camera-rf-s-18-45mm-f-4-5-6-3-stm/p/itm3bc65ea11d81b?
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/canon-r100-mirrorless-camera-rf-s-18-45mm-f-4-5-6-3-stm/p/itm3bc65ea11d81b?
+      ✓ Success (200) - Content length: 669309 bytes
+      ✓ Basic info extracted: Canon R100 Mirrorless Camera RF-S 18-45mm f/4.5-6.3 IS STM (
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/canon-r100-mirrorless-camera-rf-s-18-45mm-f-4-5-6-3-stm/p/itm3bc65ea11d81b?
+      ✓ Success (200) - Content length: 670383 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on flipkart...
+      → Configured attributes: 6
+         ✓ brand: Canon
+         ✓ model: R100
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+      ✓ Extracted 2/6 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: R100
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+    ======================================================================
+    [4/5] Product URL: https://www.flipkart.com/canon-eos-r50-mirrorless-camera-body-rf-s-18-45-mm-f-4-5-6-3-stm/p/itm3bc65
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/canon-eos-r50-mirrorless-camera-body-rf-s-18-45-mm-f-4-5-6-3-stm/p/itm3bc65
+      ✓ Success (200) - Content length: 696099 bytes
+      ✓ Basic info extracted: Canon EOS R50 Mirrorless Camera Body with RF - S 18 - 45 mm 
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/canon-eos-r50-mirrorless-camera-body-rf-s-18-45-mm-f-4-5-6-3-stm/p/itm3bc65
+      ✓ Success (200) - Content length: 695739 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on flipkart...
+      → Configured attributes: 6
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+      ✓ Extracted 2/6 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+    ======================================================================
+    [5/5] Product URL: https://www.flipkart.com/sony-ilce-6100k-mirrorless-camera-body-selp16502-power-zoom/p/itmdab4dd74a5
+    ======================================================================
+
+      🔍 Scraping product from flipkart...
+      → Fetching: https://www.flipkart.com/sony-ilce-6100k-mirrorless-camera-body-selp16502-power-zoom/p/itmdab4dd74a5
+      ✓ Success (200) - Content length: 627113 bytes
+      ✓ Basic info extracted: SONY ILCE-6100K Mirrorless Camera Body with SELP16502 Power 
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.flipkart.com/sony-ilce-6100k-mirrorless-camera-body-selp16502-power-zoom/p/itmdab4dd74a5
+      ✓ Success (200) - Content length: 628471 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on flipkart...
+      → Configured attributes: 6
+         ✓ brand: SONY
+         ✓ model: SELP16502
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+      ✓ Extracted 2/6 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: SONY
+         • model: SELP16502
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+  Website: newegg
+      → Fetching: https://www.newegg.com
+      ✓ Success (200) - Content length: 652284 bytes
+      → Fetching: https://www.newegg.com/p/pl?d=Mirrorless+Cameras
+      ✓ Success (200) - Content length: 600069 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://www.newegg.com/canon-eos-r50-mirrorless/p/1A9-0002-002T0
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/canon-eos-r50-mirrorless/p/1A9-0002-002T0
+      ✓ Success (200) - Content length: 216778 bytes
+      ✓ Basic info extracted: Canon EOS R50 Mirrorless Camera with RF-S 18-45mm f/4.5-6.3 
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/canon-eos-r50-mirrorless/p/1A9-0002-002T0
+      ✓ Success (200) - Content length: 217237 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on newegg...
+      → Configured attributes: 7
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 2/7 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+    ======================================================================
+    [2/5] Product URL: https://www.newegg.com/p/1A9-0002-001S2
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/1A9-0002-001S2
+      ✓ Success (200) - Content length: 219932 bytes
+      ✓ Basic info extracted: Canon EOS R5 Mirrorless Camera- Body Only
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/1A9-0002-001S2
+      ✓ Success (200) - Content length: 219932 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on newegg...
+      → Configured attributes: 7
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✓ kit_type: Body Only
+         ✗ condition: not found
+      ✓ Extracted 3/7 attributes
+      📊 Attribute coverage: 3/10 (30.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+         • kit_type: Body Only
+
+      ✅ SUCCESS: 3/10 attributes (30.0%)
+
+    ======================================================================
+    [3/5] Product URL: https://www.newegg.com/p/1A9-0002-00300
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/1A9-0002-00300
+      ✓ Success (200) - Content length: 223383 bytes
+      ✓ Basic info extracted: Canon EOS R8 Full-Frame Mirrorless Camera
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/1A9-0002-00300
+      ✓ Success (200) - Content length: 223383 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on newegg...
+      → Configured attributes: 7
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 2/7 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+    ======================================================================
+    [4/5] Product URL: https://www.newegg.com/p/1A9-0005-008F5
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/p/1A9-0005-008F5
+      ✓ Success (200) - Content length: 194562 bytes
+      ✓ Basic info extracted: Sony Alpha a7C II Mirrorless Camera, Black
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/p/1A9-0005-008F5
+      ✓ Success (200) - Content length: 194562 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on newegg...
+      → Configured attributes: 7
+         ✓ brand: Sony
+         ✓ model: Alpha
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 2/7 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: Sony
+         • model: Alpha
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+    ======================================================================
+    [5/5] Product URL: https://www.newegg.com/canon-5811c022-mirrorless/p/1A9-0002-002S4
+    ======================================================================
+
+      🔍 Scraping product from newegg...
+      → Fetching: https://www.newegg.com/canon-5811c022-mirrorless/p/1A9-0002-002S4
+      ✓ Success (200) - Content length: 220621 bytes
+      ✓ Basic info extracted: Canon EOS R50 Mirrorless Camera with 18-45mm and 55-210mm Le
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://www.newegg.com/canon-5811c022-mirrorless/p/1A9-0002-002S4
+      ✓ Success (200) - Content length: 220621 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on newegg...
+      → Configured attributes: 7
+         ✓ brand: Canon
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 2/7 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: Canon
+         • model: EOS
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+  Website: craigslist
+      → Fetching: https://sfbay.craigslist.org/search/sss?query=Mirrorless+Cameras&sort=rel
+      ✓ Success (200) - Content length: 165881 bytes
+    Found 5 product URLs
+
+    ======================================================================
+    [1/5] Product URL: https://sfbay.craigslist.org/sby/pho/d/santa-clara-evo-rage-3-axis-handheld/7857818805.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/sby/pho/d/santa-clara-evo-rage-3-axis-handheld/7857818805.html
+      ✓ Success (200) - Content length: 21070 bytes
+      ✓ Basic info extracted: EVO Rage-S 3 Axis Handheld Gimbal for Small Mirrorless Camer
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/sby/pho/d/santa-clara-evo-rage-3-axis-handheld/7857818805.html
+      ✓ Success (200) - Content length: 21070 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on craigslist...
+      → Configured attributes: 7
+         ✗ brand: not found
+         ✗ model: not found
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 0/7 attributes
+      📊 Attribute coverage: 0/10 (0.0%)
+
+      📋 Extracted Attributes:
+
+      ✅ SUCCESS: 0/10 attributes (0.0%)
+
+    ======================================================================
+    [2/5] Product URL: https://sfbay.craigslist.org/nby/pho/d/petaluma-sony-a9-mirrorless-camera/7898594961.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/nby/pho/d/petaluma-sony-a9-mirrorless-camera/7898594961.html
+      ✓ Success (200) - Content length: 24113 bytes
+      ✓ Basic info extracted: Sony a9 Mirrorless Camera
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/nby/pho/d/petaluma-sony-a9-mirrorless-camera/7898594961.html
+      ✓ Success (200) - Content length: 24113 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on craigslist...
+      → Configured attributes: 7
+         ✓ brand: Sony
+         ✓ model: a9
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 2/7 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: Sony
+         • model: a9
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+    ======================================================================
+    [3/5] Product URL: https://sfbay.craigslist.org/sby/ele/d/san-jose-sony-alpha-mp-mirrorless/7891968510.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/sby/ele/d/san-jose-sony-alpha-mp-mirrorless/7891968510.html
+      ✓ Success (200) - Content length: 16412 bytes
+      ✓ Basic info extracted: Sony Alpha a6100 24.2MP Mirrorless Camera - Black (with 16-5
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/sby/ele/d/san-jose-sony-alpha-mp-mirrorless/7891968510.html
+      ✓ Success (200) - Content length: 16412 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on craigslist...
+      → Configured attributes: 7
+         ✓ brand: Sony
+         ✓ model: Alpha
+         ✓ megapixels: 24.2
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✓ kit_type: Kit
+         ✗ condition: not found
+      ✓ Extracted 4/7 attributes
+      📊 Attribute coverage: 4/10 (40.0%)
+
+      📋 Extracted Attributes:
+         • brand: Sony
+         • model: Alpha
+         • megapixels: 24.2
+         • kit_type: Kit
+
+      ✅ SUCCESS: 4/10 attributes (40.0%)
+
+    ======================================================================
+    [4/5] Product URL: https://sfbay.craigslist.org/eby/pho/d/union-city-sony-a1-50mp-full-frame/7896175655.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/eby/pho/d/union-city-sony-a1-50mp-full-frame/7896175655.html
+      ✓ Success (200) - Content length: 34152 bytes
+      ✓ Basic info extracted: Sony A1 50MP full frame mirrorless camera
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/eby/pho/d/union-city-sony-a1-50mp-full-frame/7896175655.html
+      ✓ Success (200) - Content length: 34152 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on craigslist...
+      → Configured attributes: 7
+         ✓ brand: Sony
+         ✓ model: A1
+         ✓ megapixels: 50
+         ✓ sensor_type: full frame
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 4/7 attributes
+      📊 Attribute coverage: 4/10 (40.0%)
+
+      📋 Extracted Attributes:
+         • brand: Sony
+         • model: A1
+         • megapixels: 50
+         • sensor_type: full frame
+
+      ✅ SUCCESS: 4/10 attributes (40.0%)
+
+    ======================================================================
+    [5/5] Product URL: https://sfbay.craigslist.org/pen/pho/d/daly-city-canon-eos-rp-mirrorless/7899297506.html
+    ======================================================================
+
+      🔍 Scraping product from craigslist...
+      → Fetching: https://sfbay.craigslist.org/pen/pho/d/daly-city-canon-eos-rp-mirrorless/7899297506.html
+      ✓ Success (200) - Content length: 30816 bytes
+      ✓ Basic info extracted: CANON EOS RP Mirrorless Digital Camera and 35mm and 50mm len
+      🔄 Re-fetching page for attribute extraction...
+      → Fetching: https://sfbay.craigslist.org/pen/pho/d/daly-city-canon-eos-rp-mirrorless/7899297506.html
+      ✓ Success (200) - Content length: 30816 bytes
+      🏷️  Extracting attributes using config for Mirrorless Cameras on craigslist...
+      → Configured attributes: 7
+         ✓ brand: CANON
+         ✓ model: EOS
+         ✗ megapixels: not found
+         ✗ sensor_type: not found
+         ✗ video_capability: not found
+         ✗ kit_type: not found
+         ✗ condition: not found
+      ✓ Extracted 2/7 attributes
+      📊 Attribute coverage: 2/10 (20.0%)
+
+      📋 Extracted Attributes:
+         • brand: CANON
+         • model: EOS
+
+      ✅ SUCCESS: 2/10 attributes (20.0%)
+
+✓ Checkpoint saved: 54 products
+
+✓ Checkpoint saved: 54 products
+
+✓ Saved 54 products to /Users/hoaidv/Project/waterlily/experiment/3_products/scrapers/../../output/scraping_log.json
+
+============================================================
+Scraping Complete!
+============================================================
+Categories processed: 3
+Products scraped: 54
+Products with attributes: 52
+
+Products per website:
+  amazon: 9
+  flipkart: 24
+  newegg: 39
+  craigslist: 54
+
+Errors: 0

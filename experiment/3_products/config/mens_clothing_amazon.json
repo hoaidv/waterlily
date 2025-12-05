@@ -1,0 +1,59 @@
+{
+  "category": "Men's Clothing",
+  "website": "amazon",
+  "search_query": "men's clothing shirts pants",
+  "listing_selectors": {
+    "product_container": "div[data-component-type='s-search-result']",
+    "product_link": "h2 a"
+  },
+  "product_selectors": {
+    "title": [
+      {"selector": "span#productTitle"}
+    ],
+    "price": [
+      {"selector": "span.a-price span.a-price-whole"}
+    ],
+    "rating": [
+      {"selector": "span.a-icon-alt", "regex": "(\\d+\\.?\\d*)"}
+    ]
+  },
+  "attributes": {
+    "brand": {
+      "method": "regex",
+      "pattern": "(Nike|Adidas|Under Armour|Levi's|Calvin Klein|Tommy Hilfiger|Ralph Lauren|Gap|H&M|Zara|Uniqlo|Champion|Puma|Reebok|New Balance|Carhartt|Wrangler|Lee|Dockers|Columbia|The North Face)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "clothing_type": {
+      "method": "regex",
+      "pattern": "(T-Shirt|Shirt|Polo|Hoodie|Jacket|Jeans|Pants|Shorts|Sweater|Sweatshirt|Tank Top)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "size": {
+      "method": "regex",
+      "pattern": "\\b(XS|S|M|L|XL|XXL|XXXL|2XL|3XL|4XL|Small|Medium|Large|X-Large)\\b",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "color": {
+      "method": "regex",
+      "pattern": "(Black|White|Blue|Red|Green|Yellow|Orange|Purple|Pink|Gray|Grey|Navy|Khaki|Beige|Brown|Tan)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "material": {
+      "method": "regex",
+      "pattern": "(Cotton|Polyester|Denim|Wool|Fleece|Leather|Linen|Silk|Nylon|Spandex|Blend)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "fit": {
+      "method": "regex",
+      "pattern": "(Slim Fit|Regular Fit|Relaxed Fit|Athletic Fit|Classic Fit|Loose Fit)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    }
+  }
+}
+

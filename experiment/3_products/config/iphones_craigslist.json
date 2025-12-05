@@ -1,0 +1,71 @@
+{
+  "category": "iPhones",
+  "website": "craigslist",
+  "search_query": "iPhone -case -cover -screen -charger -cable -protector -holder -mount",
+  "listing_selectors": {
+    "product_row": "li.result-row",
+    "product_link": "a.result-title"
+  },
+  "product_selectors": {
+    "title": [
+      {"selector": "span#titletextonly"}
+    ],
+    "price": [
+      {"selector": "span.price"}
+    ],
+    "location": [
+      {"selector": "div.mapaddress"}
+    ],
+    "description": [
+      {"selector": "section#postingbody"}
+    ]
+  },
+  "attributes": {
+    "brand": {
+      "method": "regex",
+      "pattern": "(Apple|iPhone)",
+      "source": "title",
+      "default": "Apple"
+    },
+    "model": {
+      "method": "regex",
+      "pattern": "i?Phones?\\s*(\\d+[a-zA-Z\\s]*(?:Pro\\s*Max|Pro|Plus)?)",
+      "source": "title",
+      "flags": "IGNORECASE",
+      "fallback": {
+        "method": "regex",
+        "pattern": "i?Phones?\\s*(\\d+[a-zA-Z\\s]*(?:Pro\\s*Max|Pro|Plus)?)",
+        "source": "description"
+      }
+    },
+    "storage": {
+      "method": "regex",
+      "pattern": "(\\d+)\\s*[GT]B?(?!\\s*RAM)",
+      "source": "title",
+      "fallback": {
+        "method": "regex",
+        "pattern": "(\\d+)\\s*[GT]B?",
+        "source": "description"
+      }
+    },
+    "color": {
+      "method": "regex",
+      "pattern": "(Black|White|Blue|Red|Green|Purple|Pink|Gold|Silver|Gray|Grey|Titanium|Starlight|Midnight|Graphite|Sierra Blue|Alpine Green)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "condition": {
+      "method": "regex",
+      "pattern": "(New Sealed|New|Renewed|Refurbished|Used|Pre-owned|For Parts|Broken)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "carrier": {
+      "method": "regex",
+      "pattern": "(Unlocked|AT&T|Verizon|T-Mobile|Sprint)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    }
+  }
+}
+

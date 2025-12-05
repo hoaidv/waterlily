@@ -1,0 +1,59 @@
+{
+  "category": "Mirrorless Cameras",
+  "website": "flipkart",
+  "search_query": "mirrorless camera",
+  "listing_selectors": {
+    "product_link": "a[href*='/p/']"
+  },
+  "product_selectors": {
+    "title": [
+      {"selector": "span.B_NuCI"},
+      {"selector": "h1.yhB1nd"}
+    ],
+    "price": [
+      {"selector": "div._30jeq3"}
+    ],
+    "rating": [
+      {"selector": "div._3LWZlK"}
+    ]
+  },
+  "attributes": {
+    "brand": {
+      "method": "regex",
+      "pattern": "(Sony|Canon|Nikon|Fujifilm|Panasonic|Olympus)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "model": {
+      "method": "regex",
+      "pattern": "(Alpha|EOS|Z\\d+|X-[A-Z]\\d+|LUMIX|OM-\\d+|[A-Z]+\\d+)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "megapixels": {
+      "method": "regex",
+      "pattern": "(\\d+\\.?\\d*)\\s*MP",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "sensor_type": {
+      "method": "regex",
+      "pattern": "(Full Frame|APS-C|Micro Four Thirds|MFT)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "video_capability": {
+      "method": "regex",
+      "pattern": "(4K|8K|Full HD|1080p)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "kit_type": {
+      "method": "regex",
+      "pattern": "(Body Only|Kit|with Lens)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    }
+  }
+}
+

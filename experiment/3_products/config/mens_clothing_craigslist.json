@@ -1,0 +1,53 @@
+{
+  "category": "Men's Clothing",
+  "website": "craigslist",
+  "search_query": "men clothing shirts",
+  "listing_selectors": {
+    "product_row": "li.result-row",
+    "product_link": "a.result-title"
+  },
+  "product_selectors": {
+    "title": [
+      {"selector": "span#titletextonly"}
+    ],
+    "price": [
+      {"selector": "span.price"}
+    ],
+    "description": [
+      {"selector": "section#postingbody"}
+    ]
+  },
+  "attributes": {
+    "brand": {
+      "method": "regex",
+      "pattern": "(Nike|Adidas|Under Armour|Levi's|Calvin Klein|Tommy Hilfiger|Ralph Lauren|Gap|Carhartt|Wrangler|Lee|Columbia|The North Face)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "clothing_type": {
+      "method": "regex",
+      "pattern": "(T-Shirt|Shirt|Polo|Hoodie|Jacket|Jeans|Pants|Shorts|Sweater)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "size": {
+      "method": "regex",
+      "pattern": "\\b(XS|S|M|L|XL|XXL|XXXL|Small|Medium|Large)\\b",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "color": {
+      "method": "regex",
+      "pattern": "(Black|White|Blue|Red|Green|Gray|Grey|Navy|Khaki|Brown)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    },
+    "condition": {
+      "method": "regex",
+      "pattern": "(New|Like New|Used|Excellent|Good)",
+      "source": "title",
+      "flags": "IGNORECASE"
+    }
+  }
+}
+
