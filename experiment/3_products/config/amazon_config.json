@@ -1,0 +1,2392 @@
+{
+  "Hangers": {
+    "category": "Hangers",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Product Dimensions",
+          "Special Feature",
+          "Recommended Uses For Product"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Product Dimensions",
+          "Special Feature"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      }
+    ]
+  },
+  "AA Batteries": {
+    "category": "AA Batteries",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B00MNV8E0C                             Best Sellers Rank"
+        ],
+        "frequency": 12,
+        "confidence": 2.4
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Number of Batteries",
+          "Brand",
+          "Battery Cell Composition",
+          "Battery Capacity",
+          "Recommended Uses For Product"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B00MNV8E0C                             Best Sellers Rank"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      }
+    ]
+  },
+  "Sugar Bowls": {
+    "category": "Sugar Bowls",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Bowl Material",
+          "Number of Pieces",
+          "Brand",
+          "Style",
+          "Special Feature"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Bowl Material",
+          "Number of Pieces",
+          "Brand",
+          "Style"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      }
+    ]
+  },
+  "Embroidery Kits": {
+    "category": "Embroidery Kits",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Age Range (Description)",
+          "Theme",
+          "Item dimensions L x W x H",
+          "Material"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Age Range (Description)",
+          "Theme",
+          "Item dimensions L x W x H"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Baby Bottles": {
+    "category": "Baby Bottles",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'attribute')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "GreenCircle Certified",
+          "GreenCircle Certified"
+        ],
+        "frequency": 8,
+        "confidence": 2.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item model number",
+          "Material Composition",
+          "Material free",
+          "Number Of Items"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Customer Reviews",
+          "Best Sellers Rank"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material Type Free",
+          "Item Weight",
+          "Bottle Nipple Type"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 2,
+        "confidence": 0.5
+      }
+    ]
+  },
+  "External Hard Drives": {
+    "category": "External Hard Drives",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Hard Drive"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_2']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Series",
+          "Item model number",
+          "Hardware Platform",
+          "Operating System"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Customer Reviews",
+          "Best Sellers Rank"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Digital Storage Capacity",
+          "Hard Disk Interface",
+          "Connectivity Technology",
+          "Brand",
+          "Special Feature"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Educational Toys": {
+    "category": "Educational Toys",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item Weight",
+          "ASIN",
+          "Item model number",
+          "Manufacturer recommended age"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Theme",
+          "Item dimensions L x W x H",
+          "Material"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Women's Lingerie": {
+    "category": "Women's Lingerie",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0D47FRMGZ                     Product Warranty"
+        ],
+        "frequency": 12,
+        "confidence": 2.4
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0D47FRMGZ                     Product Warranty"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      }
+    ]
+  },
+  "Mesh Wi-Fi Systems": {
+    "category": "Mesh Wi-Fi Systems",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 10,
+        "confidence": 2.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item Weight",
+          "ASIN",
+          "Item model number",
+          "Customer Reviews"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Model Name",
+          "Special Feature",
+          "Frequency Band Class",
+          "Wireless Communication Standard"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Bike Accessories": {
+    "category": "Bike Accessories",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Manufacturer",
+          "Brand",
+          "Model",
+          "Item Weight",
+          "Product Dimensions"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Customer Reviews",
+          "Best Sellers Rank",
+          "Date First Available"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Compatible Devices",
+          "Compatible Phone Models",
+          "Mounting Type"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Men's Khakis": {
+    "category": "Men's Khakis",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0D4BGH6BY                             Best Sellers Rank"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0D4BGH6BY                             Best Sellers Rank"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Women's Sneakers": {
+    "category": "Women's Sneakers",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0G45KP84F                     Product Warranty"
+        ],
+        "frequency": 6,
+        "confidence": 1.2
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='fit-sizechartv2-0-table-0']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand Size"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0G45KP84F                     Product Warranty"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Baby Gear": {
+    "category": "Baby Gear",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B099DT5MNQ                             Best Sellers Rank"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B099DT5MNQ                             Best Sellers Rank"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Power Source",
+          "Model Name"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Women's Wide Leg Pants": {
+    "category": "Women's Wide Leg Pants",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0D4PYCG1V                     Product Warranty"
+        ],
+        "frequency": 6,
+        "confidence": 1.2
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Item Package Dimensions L x W x H",
+          "Package Weight",
+          "Brand Name",
+          "Material",
+          "Suggested Users"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Customer Reviews",
+          "Best Sellers Rank",
+          "Date First Available"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-lineitem a-align-top']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Price:"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0D4PYCG1V                     Product Warranty"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Backpacks School": {
+    "category": "Backpacks School",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item Weight",
+          "Department",
+          "Manufacturer",
+          "Language"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B07CQ2ML4T                     Product Warranty"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B07CQ2ML4T                     Product Warranty"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Men's Athletic Shirts": {
+    "category": "Men's Athletic Shirts",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B07RP2ZQ3G                     Product Warranty"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'attribute')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Small Business",
+          "Small Business"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Mystery & Thriller": {
+    "category": "Mystery & Thriller",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-keyvalue a-vertical-stripes a-span6']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Listening Length",
+          "Author",
+          "Narrator",
+          "Whispersync for Voice",
+          "Audible.com Release Date"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "GPS Navigation": {
+    "category": "GPS Navigation",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item Weight",
+          "ASIN",
+          "Item model number",
+          "Customer Reviews"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Connectivity Technology",
+          "Controller Type",
+          "Special Feature",
+          "Compatible Devices"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Item Weight",
+          "Product Dimensions",
+          "Batteries",
+          "Display Size",
+          "Warranty"
+        ],
+        "frequency": 2,
+        "confidence": 0.5
+      }
+    ]
+  },
+  "Teapots": {
+    "category": "Teapots",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 6,
+        "confidence": 1.5
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Material",
+          "Brand",
+          "Item Weight",
+          "Product Dimensions",
+          "Capacity"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Material",
+          "Brand",
+          "Item Weight",
+          "Product Dimensions"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-bordered a-horizontal-stripes aplus-tech-spec-table']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "DAILY USE",
+          "ABOUT WHISTLE",
+          "ANTI-SCALDING MITT",
+          "ABOUT LIMESCALE"
+        ],
+        "frequency": 2,
+        "confidence": 0.5
+      }
+    ]
+  },
+  "Car Seat Covers": {
+    "category": "Car Seat Covers",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Fit Type",
+          "Brand",
+          "UPC",
+          "Target Audience",
+          "Manufacturer"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Customer Reviews",
+          "Best Sellers Rank",
+          "Date First Available"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Fit Type",
+          "Brand",
+          "UPC",
+          "Target Audience",
+          "Manufacturer"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Glassware": {
+    "category": "Glassware",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Special Feature",
+          "Style",
+          "Theme",
+          "Recommended Uses For Product"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Special Feature",
+          "Style",
+          "Theme"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Electronics": {
+    "category": "Electronics",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item Weight",
+          "ASIN",
+          "Item model number",
+          "Batteries"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Operating System",
+          "Ram Memory Installed Size",
+          "CPU Model",
+          "CPU Speed"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='technicalSpecifications_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand, Seller, or Collection Name",
+          "Material",
+          "Gem Type",
+          "Item Length",
+          "Stone Weight"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='technicalSpecifications_section_2_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Metal",
+          "Metal stamp"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Home Theater Systems": {
+    "category": "Home Theater Systems",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Material",
+          "Model Name",
+          "Speaker Type",
+          "Special Feature",
+          "Recommended Uses For Product"
+        ],
+        "frequency": 3,
+        "confidence": 0.75
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Speaker Maximum Output Power",
+          "Connectivity Technology",
+          "Audio Output Mode",
+          "Mounting Type"
+        ],
+        "frequency": 3,
+        "confidence": 0.75
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'attribute')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Small Business",
+          "Small Business"
+        ],
+        "frequency": 1,
+        "confidence": 0.25
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 1,
+        "confidence": 0.25
+      }
+    ]
+  },
+  "Nursery Gliders": {
+    "category": "Nursery Gliders",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Size",
+          "Item Depth",
+          "Item dimensions L x W x H"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Best Sellers Rank",
+          "Date First Available"
+        ],
+        "frequency": 3,
+        "confidence": 0.75
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0FP3TWZ2Z                             Best Sellers Rank"
+        ],
+        "frequency": 3,
+        "confidence": 0.75
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Care Instructions",
+          "Assembly Instructions Description",
+          "Material",
+          "Is Extendable",
+          "Manufacturer"
+        ],
+        "frequency": 2,
+        "confidence": 0.5
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0FP3TWZ2Z                             Best Sellers Rank"
+        ],
+        "frequency": 1,
+        "confidence": 0.25
+      }
+    ]
+  },
+  "LED TVs": {
+    "category": "LED TVs",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-bordered']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Resolution",
+          "Display resolution",
+          "High Dynamic Range (HDR) format",
+          "Backlight type",
+          "Refresh rate"
+        ],
+        "frequency": 16,
+        "confidence": 3.2
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand Name",
+          "Item Weight",
+          "Product Dimensions",
+          "Item model number",
+          "Batteries"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Customer Reviews",
+          "Best Sellers Rank",
+          "Date First Available"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Screen Size",
+          "Brand",
+          "Display Technology",
+          "Resolution",
+          "Refresh Rate"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Coffee Makers": {
+    "category": "Coffee Makers",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Product Dimensions",
+          "Special Feature",
+          "Coffee Maker Type",
+          "Style"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Product Dimensions",
+          "Special Feature",
+          "Coffee Maker Type"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Wireless Mice": {
+    "category": "Wireless Mice",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item Weight",
+          "ASIN",
+          "Item model number",
+          "Batteries"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Connectivity Technology",
+          "Special Feature",
+          "Movement Detection Technology"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Men's Peacoats": {
+    "category": "Men's Peacoats",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0CL9KDMYD                     Product Warranty"
+        ],
+        "frequency": 11,
+        "confidence": 2.2
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0CL9KDMYD                     Product Warranty"
+        ],
+        "frequency": 8,
+        "confidence": 1.6
+      }
+    ]
+  },
+  "Soccer": {
+    "category": "Soccer",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Product Dimensions",
+          "Item Weight",
+          "ASIN",
+          "Item model number",
+          "Manufacturer recommended age"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Product Care Instructions",
+          "Product Dimensions",
+          "Item Weight"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Product Care Instructions",
+          "Product Dimensions",
+          "Item Weight"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'attribute')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Small Business",
+          "Small Business"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Omega-3": {
+    "category": "Omega-3",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0BJ7NN9L5                             Best Sellers Rank"
+        ],
+        "frequency": 10,
+        "confidence": 2.0
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'feature')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0BJ7NN9L5                             Best Sellers Rank"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Flavor",
+          "Primary Supplement Type",
+          "Unit Count",
+          "Item Form"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0BJ7NN9L5                             Best Sellers Rank"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      }
+    ]
+  },
+  "Brooches": {
+    "category": "Brooches",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0F43RZBVX                     Product Warranty"
+        ],
+        "frequency": 11,
+        "confidence": 2.2
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='technicalSpecifications_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand, Seller, or Collection Name",
+          "Metal stamp",
+          "Metal",
+          "Material",
+          "Gem Type"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='technicalSpecifications_section_2_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Metal",
+          "Metal stamp"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "USB Flash Drives": {
+    "category": "USB Flash Drives",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Read Speed",
+          "Connectivity Technology",
+          "Model Name",
+          "Product Dimensions",
+          "Flash Memory Type"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_2']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Item model number",
+          "Hardware Platform",
+          "Item Weight",
+          "Item Dimensions  LxWxH",
+          "Flash Memory Size"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Customer Reviews",
+          "Best Sellers Rank"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Memory Storage Capacity",
+          "Hardware Interface",
+          "Special Feature",
+          "Write Speed"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Girls' Tops": {
+    "category": "Girls' Tops",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B07Y29YPD6                             Best Sellers Rank"
+        ],
+        "frequency": 9,
+        "confidence": 1.8
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B07Y29YPD6                             Best Sellers Rank"
+        ],
+        "frequency": 3,
+        "confidence": 0.6
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'attribute')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Small Business",
+          "Small Business"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Coffee": {
+    "category": "Coffee",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Item Form",
+          "Flavor",
+          "Caffeine Content Description",
+          "Roast Level"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='nic-nutrition-facts-serving-content']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Serving size"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='nic-nutrition-facts-nutrients-content']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Calories"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Kettles": {
+    "category": "Kettles",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Special Feature",
+          "Package Information",
+          "Finish Type",
+          "Product Dimensions"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Special Feature",
+          "Package Information",
+          "Finish Type"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Women's Suits": {
+    "category": "Women's Suits",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0DF2QZV3W                     Product Warranty"
+        ],
+        "frequency": 11,
+        "confidence": 2.2
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0DF2QZV3W                     Product Warranty"
+        ],
+        "frequency": 6,
+        "confidence": 1.2
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-bordered a-horizontal-stripes aplus-tech-spec-table']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Size X-Small",
+          "Size Small",
+          "Size Medium",
+          "Size Large",
+          "Size X-Large"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Volleyball": {
+    "category": "Volleyball",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Item Package Dimensions L x W x H",
+          "Package Weight",
+          "Item Dimensions  LxWxH",
+          "Item Weight",
+          "Brand Name"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Customer Reviews",
+          "Best Sellers Rank",
+          "Date First Available"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Age Range (Description)",
+          "Item Weight"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-lineitem a-align-top']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Price:"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Cookie Cutters": {
+    "category": "Cookie Cutters",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Shape",
+          "Theme",
+          "Number of Items"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Shape",
+          "Theme",
+          "Number of Items"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Candy": {
+    "category": "Candy",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Item Form",
+          "Occasion",
+          "Chocolate Type",
+          "Flavor"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='nic-nutrition-facts-serving-content']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Serving size"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='nic-nutrition-facts-nutrients-content']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Calories"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Women's Tunics": {
+    "category": "Women's Tunics",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0F6N4XH78                     Product Warranty"
+        ],
+        "frequency": 12,
+        "confidence": 2.4
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0F6N4XH78                     Product Warranty"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      }
+    ]
+  },
+  "Girls' Dresses": {
+    "category": "Girls' Dresses",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0CD7N3VN2                     Product Warranty"
+        ],
+        "frequency": 6,
+        "confidence": 1.2
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0CD7N3VN2                     Product Warranty"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Guitar Cases": {
+    "category": "Guitar Cases",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 6,
+        "confidence": 1.5
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Item Weight",
+          "Product Dimensions",
+          "ASIN",
+          "Item model number",
+          "Customer Reviews"
+        ],
+        "frequency": 2,
+        "confidence": 0.5
+      }
+    ]
+  },
+  "RAM Memory": {
+    "category": "RAM Memory",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Standing screen display size",
+          "RAM",
+          "Memory Speed"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_2']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Series",
+          "Item model number",
+          "Item Weight",
+          "Product Dimensions"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Customer Reviews",
+          "Best Sellers Rank"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Computer Memory Size",
+          "RAM Memory Technology",
+          "Memory Speed",
+          "Compatible Devices"
+        ],
+        "frequency": 4,
+        "confidence": 0.8
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-bordered a-horizontal-stripes aplus-tech-spec-table']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Module Type",
+          "Frequency",
+          "CAS Latency",
+          "Capacity",
+          "Voltage"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Diving": {
+    "category": "Diving",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Item Package Dimensions L x W x H",
+          "Package Weight",
+          "Item Weight",
+          "Brand Name",
+          "Material"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "ASIN",
+          "Customer Reviews",
+          "Best Sellers Rank",
+          "Date First Available"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-lineitem a-align-top']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Price:"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Lens Type",
+          "Lens Material"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  },
+  "Men's Briefs": {
+    "category": "Men's Briefs",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0CCLWDJNV                             Best Sellers Rank"
+        ],
+        "frequency": 6,
+        "confidence": 1.5
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "B0CCLWDJNV                             Best Sellers Rank"
+        ],
+        "frequency": 2,
+        "confidence": 0.5
+      }
+    ]
+  },
+  "Cymbals": {
+    "category": "Cymbals",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Body Material",
+          "Included Components",
+          "Manufacturer",
+          "Set Name",
+          "Item Weight"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Material",
+          "Model Name",
+          "Item Weight"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Die-Cast Models": {
+    "category": "Die-Cast Models",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Package Dimensions",
+          "Item Weight",
+          "ASIN",
+          "Item model number",
+          "Manufacturer recommended age"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 2,
+        "confidence": 0.5
+      }
+    ]
+  },
+  "Tech Magazines": {
+    "category": "Tech Magazines",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Mandolins": {
+    "category": "Mandolins",
+    "patterns_found": true,
+    "total_products_analyzed": 4,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Product Dimensions",
+          "Material",
+          "Special Feature",
+          "Recommended Uses For Product"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Brand",
+          "Product Dimensions",
+          "Material",
+          "Special Feature",
+          "Recommended Uses For Product"
+        ],
+        "frequency": 4,
+        "confidence": 1.0
+      }
+    ]
+  },
+  "Fiction Books": {
+    "category": "Fiction Books",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-keyvalue a-vertical-stripes a-span6']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Book 6 of 6",
+          "Listening Length",
+          "Author",
+          "Narrator",
+          "Whispersync for Voice"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'feature')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Format"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
+  }
+}
