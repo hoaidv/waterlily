@@ -69,6 +69,10 @@ class PatternLearner:
         definition_lists = self._find_definition_lists(tree)
         analysis['structured_data'].extend(definition_lists)
         
+        # Find detail bullet lists (ul.detail-bullet-list)
+        detail_bullet_lists = self._find_detail_bullet_lists(tree)
+        analysis['structured_data'].extend(detail_bullet_lists)
+        
         # Generate extraction rules from found patterns
         analysis['extraction_rules'] = self._generate_extraction_rules(analysis)
         
@@ -132,6 +136,7 @@ class PatternLearner:
     def _find_structured_divs(self, tree) -> List[Dict[str, Any]]:
         """
         Find div elements with structured key-value data
+        Including div[role=list] with product-facts-detail children
         
         Args:
             tree: lxml tree
@@ -140,6 +145,31 @@ class PatternLearner:
             List of structured data patterns
         """
         structured_data = []
+        
+        # PRIORITY: div[role=list] with product-facts-detail children (Amazon's product details)
+        list_divs = tree.xpath('//div[@role="list"]')
+        for list_div in list_divs:
+            # Find all product-facts-detail divs within this list
+            detail_divs = list_div.xpath('.//div[contains(@class, "product-facts-detail")]')
+            
+            if detail_divs:
+                kv_pairs = []
+                for detail_div in detail_divs:
+                    # Extract key-value pairs from the grid structure
+                    pairs = self._extract_key_values_from_div(detail_div)
+                    kv_pairs.extend(pairs)
+                
+                if kv_pairs:
+                    # Use specific XPath for role=list containers
+                    xpath = '//div[@role="list"]//div[contains(@class, "product-facts-detail")]'
+                    
+                    structured_data.append({
+                        'type': 'product_facts_list',
+                        'xpath': xpath,
+                        'id': list_div.get('id'),
+                        'class': list_div.get('class'),
+                        'key_value_pairs': kv_pairs
+                    })
         
         # Common patterns for product specifications
         patterns = [
@@ -221,6 +251,76 @@ class PatternLearner:
         
         return definition_lists
     
+    def _find_detail_bullet_lists(self, tree) -> List[Dict[str, Any]]:
+        """
+        Find ul.detail-bullet-list with li items containing bold key + value span pairs
+        
+        Structure:
+        <ul class="detail-bullet-list">
+          <li><span><span class="a-text-bold">Key:</span> <span>Value</span></span></li>
+        </ul>
+        
+        Args:
+            tree: lxml tree
+            
+        Returns:
+            List of detail bullet list patterns
+        """
+        bullet_lists = []
+        
+        # Find ul with detail-bullet-list class
+        ul_elements = tree.xpath('//ul[contains(@class, "detail-bullet-list")]')
+        
+        for idx, ul in enumerate(ul_elements):
+            kv_pairs = []
+            
+            # Find all li elements
+            lis = ul.xpath('.//li')
+            
+            for li in lis:
+                # Look for bold key followed by value
+                # Pattern: <span class="a-text-bold">Key:</span> <span>Value</span>
+                bold_spans = li.xpath('.//span[contains(@class, "a-text-bold")]')
+                
+                for bold_span in bold_spans:
+                    key_text = self._extract_text(bold_span).strip()
+                    
+                    # Remove trailing colon if present
+                    key = key_text.rstrip(':').strip()
+                    
+                    # Try to find value in following sibling span
+                    value_spans = bold_span.xpath('./following-sibling::span[1]')
+                    if value_spans:
+                        value = self._extract_text(value_spans[0]).strip()
+                        
+                        if key and value and self._is_valid_attribute_name(key):
+                            kv_pairs.append({
+                                'key': key,
+                                'value': value
+                            })
+            
+            if kv_pairs:
+                ul_id = ul.get('id')
+                ul_class = ul.get('class')
+                
+                # Generate XPath
+                if ul_id:
+                    xpath = f"//ul[@id='{ul_id}']//li"
+                elif 'detail-bullet-list' in (ul_class or ''):
+                    xpath = "//ul[contains(@class, 'detail-bullet-list')]//li"
+                else:
+                    xpath = f"(//ul)[{idx + 1}]//li"
+                
+                bullet_lists.append({
+                    'type': 'detail_bullet_list',
+                    'xpath': xpath,
+                    'id': ul_id,
+                    'class': ul_class,
+                    'key_value_pairs': kv_pairs
+                })
+        
+        return bullet_lists
+    
     def _extract_key_values_from_div(self, div_elem) -> List[Dict[str, str]]:
         """
         Extract key-value pairs from a div element
@@ -233,7 +333,19 @@ class PatternLearner:
         """
         kv_pairs = []
         
-        # Look for nested spans or divs with key-value pattern
+        # Pattern 0: Amazon grid pattern (a-col-left / a-col-right)
+        # <div class="a-fixed-left-grid-col a-col-left">KEY</div>
+        # <div class="a-fixed-left-grid-col a-col-right">VALUE</div>
+        left_cols = div_elem.xpath('.//div[contains(@class, "a-col-left")]')
+        for left_col in left_cols:
+            key = self._extract_text(left_col).strip()
+            # Find corresponding right column (next sibling or nearby)
+            right_col = left_col.xpath('./following-sibling::div[contains(@class, "a-col-right")][1]')
+            if right_col:
+                value = self._extract_text(right_col[0]).strip()
+                if key and value and self._is_valid_attribute_name(key):
+                    kv_pairs.append({'key': key, 'value': value})
+        
         # Pattern 1: <span class="label">Key</span><span class="value">Value</span>
         labels = div_elem.xpath('.//span[contains(@class, "label") or contains(@class, "key")]')
         
@@ -330,6 +442,7 @@ class PatternLearner:
     def _extract_text(self, elem) -> str:
         """
         Extract all text from an element, excluding script and style tags
+        Clean up whitespace and special characters
         
         Args:
             elem: lxml element
@@ -341,7 +454,16 @@ class PatternLearner:
         for script in elem.xpath('.//script | .//style'):
             script.getparent().remove(script)
         
-        return ' '.join(elem.itertext()).strip()
+        text = ' '.join(elem.itertext())
+        
+        # Clean up whitespace
+        # Replace multiple spaces/newlines/tabs with single space
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Remove special Unicode characters (zero-width, RTL marks, etc.)
+        text = re.sub(r'[\u200b-\u200f\u202a-\u202e\ufeff]', '', text)
+        
+        return text.strip()
     
     def _generate_extraction_rules(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
@@ -478,39 +600,74 @@ class PatternLearner:
                 if not elements:
                     continue
                 
-                elem = elements[0]  # Take first match
+                # For product_facts_list and detail_bullet_list, process ALL matching elements
+                # For others, take just the first match
+                rule_type = rule.get('type')
+                elements_to_process = elements if rule_type in ['product_facts_list', 'detail_bullet_list'] else [elements[0]]
                 
-                if extraction_method == 'table_key_value':
-                    # Extract from table
-                    rows = elem.xpath('.//tr')
-                    for row in rows:
-                        cells = row.xpath('.//th | .//td')
-                        if len(cells) == 2:
-                            key = self._extract_text(cells[0]).strip()
-                            value = self._extract_text(cells[1]).strip()
-                            if key and value and self._is_valid_attribute_name(key):
-                                # Normalize key
-                                normalized_key = self._normalize_attribute_name(key)
-                                attributes[normalized_key] = value
-                
-                elif extraction_method == 'key_value_pairs':
-                    # Extract key-value pairs
-                    if rule['type'] == 'dl':
-                        terms = elem.xpath('.//dt')
-                        definitions = elem.xpath('.//dd')
-                        for term, definition in zip(terms, definitions):
-                            key = self._extract_text(term).strip()
-                            value = self._extract_text(definition).strip()
-                            if key and value and self._is_valid_attribute_name(key):
-                                normalized_key = self._normalize_attribute_name(key)
-                                attributes[normalized_key] = value
-                    else:
-                        # Try to extract from div
-                        kv_pairs = self._extract_key_values_from_div(elem)
-                        for kv in kv_pairs:
-                            if self._is_valid_attribute_name(kv['key']):
-                                normalized_key = self._normalize_attribute_name(kv['key'])
-                                attributes[normalized_key] = kv['value']
+                for elem in elements_to_process:
+                    if extraction_method == 'table_key_value':
+                        # Extract from table
+                        rows = elem.xpath('.//tr')
+                        for row in rows:
+                            cells = row.xpath('.//th | .//td')
+                            if len(cells) == 2:
+                                key = self._extract_text(cells[0]).strip()
+                                value = self._extract_text(cells[1]).strip()
+                                if key and value and self._is_valid_attribute_name(key):
+                                    # Normalize key
+                                    normalized_key = self._normalize_attribute_name(key)
+                                    attributes[normalized_key] = value
+                    
+                    elif extraction_method == 'key_value_pairs':
+                        # Extract key-value pairs
+                        rule_type = rule.get('type')
+                        
+                        if rule_type == 'dl':
+                            terms = elem.xpath('.//dt')
+                            definitions = elem.xpath('.//dd')
+                            for term, definition in zip(terms, definitions):
+                                key = self._extract_text(term).strip()
+                                value = self._extract_text(definition).strip()
+                                if key and value and self._is_valid_attribute_name(key):
+                                    normalized_key = self._normalize_attribute_name(key)
+                                    attributes[normalized_key] = value
+                        
+                        elif rule_type == 'product_facts_list':
+                            # Extract from role=list with product-facts-detail children
+                            # The xpath points to product-facts-detail divs directly
+                            # elem is already one product-facts-detail div
+                            kv_pairs = self._extract_key_values_from_div(elem)
+                            for kv in kv_pairs:
+                                if self._is_valid_attribute_name(kv['key']):
+                                    normalized_key = self._normalize_attribute_name(kv['key'])
+                                    attributes[normalized_key] = kv['value']
+                        
+                        elif rule_type == 'detail_bullet_list':
+                            # Extract from ul.detail-bullet-list > li with bold key + value spans
+                            # elem is an li element
+                            bold_spans = elem.xpath('.//span[contains(@class, "a-text-bold")]')
+                            
+                            for bold_span in bold_spans:
+                                key_text = self._extract_text(bold_span).strip()
+                                key = key_text.rstrip(':').strip()
+                                
+                                # Find value in following sibling span
+                                value_spans = bold_span.xpath('./following-sibling::span[1]')
+                                if value_spans:
+                                    value = self._extract_text(value_spans[0]).strip()
+                                    
+                                    if key and value and self._is_valid_attribute_name(key):
+                                        normalized_key = self._normalize_attribute_name(key)
+                                        attributes[normalized_key] = value
+                        
+                        else:
+                            # Generic div extraction
+                            kv_pairs = self._extract_key_values_from_div(elem)
+                            for kv in kv_pairs:
+                                if self._is_valid_attribute_name(kv['key']):
+                                    normalized_key = self._normalize_attribute_name(kv['key'])
+                                    attributes[normalized_key] = kv['value']
                 
             except Exception as e:
                 logging.warning(f"Error applying rule {rule.get('xpath')}: {e}")

@@ -7,7 +7,7 @@ import json
 import logging
 import re
 from typing import Dict, List, Any, Optional
-from urllib.parse import quote_plus, urljoin
+from urllib.parse import quote_plus, urljoin, urlparse, parse_qs, unquote
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -133,6 +133,40 @@ class AmazonScraper(BaseScraper):
             self.stats['errors'] += 1
         
         return products
+    
+    def _extract_real_url(self, url: str) -> str:
+        """
+        Extract real product URL from Amazon tracking/redirect URLs
+        
+        Args:
+            url: Potentially a redirect URL (e.g., /sspa/click?...)
+            
+        Returns:
+            The actual product URL
+        """
+        # Handle /sspa/click redirect URLs
+        if '/sspa/click' in url:
+            try:
+                parsed = urlparse(url)
+                query_params = parse_qs(parsed.query)
+                
+                # Extract the 'url' parameter which contains the actual product URL
+                if 'url' in query_params:
+                    real_url = unquote(query_params['url'][0])
+                    
+                    # If it's a relative URL, make it absolute
+                    if real_url.startswith('/'):
+                        real_url = f"{self.base_url}{real_url}"
+                    
+                    return real_url
+            except Exception as e:
+                logging.warning(f"Failed to extract real URL from {url}: {e}")
+        
+        # If URL is relative, make it absolute
+        if url.startswith('/'):
+            return f"{self.base_url}{url}"
+        
+        return url
     
     def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
         """
