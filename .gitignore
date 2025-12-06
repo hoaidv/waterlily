@@ -1,4 +1,5 @@
-
+./experiment/3_products/output/
+.log
 .DS_Store
 .gradle
 build/

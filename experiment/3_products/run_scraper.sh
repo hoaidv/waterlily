@@ -1,23 +1,64 @@
 #!/bin/bash
-# Runner script for the product scraper
 
-cd "$(dirname "$0")/scrapers"
+# Script to run the Amazon scraper
 
-# Check if sample mode
-if [ "$1" == "--sample" ] || [ "$1" == "-s" ]; then
-    echo "Running in SAMPLE mode..."
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}======================================${NC}"
+echo -e "${GREEN}   Amazon Product Scraper${NC}"
+echo -e "${GREEN}======================================${NC}"
+echo ""
+
+# Check if virtual environment exists
+if [ ! -d "venv" ]; then
+    echo -e "${YELLOW}Creating virtual environment...${NC}"
+    python3 -m venv venv
+fi
+
+# Activate virtual environment
+echo -e "${YELLOW}Activating virtual environment...${NC}"
+source venv/bin/activate
+
+# Install dependencies
+echo -e "${YELLOW}Installing dependencies...${NC}"
+pip install -q --upgrade pip
+pip install -q -r requirements.txt
+
+# Run the scraper
+echo ""
+echo -e "${GREEN}Starting scraper...${NC}"
+echo ""
+
+cd scrapers
+
+# Check if arguments provided
+if [ $# -eq 0 ]; then
+    # No arguments - run with sample categories
+    echo -e "${YELLOW}No categories specified, running with sample categories...${NC}"
     python3 orchestrator.py --sample
-elif [ "$1" == "--resume" ] || [ "$1" == "-r" ]; then
-    echo "Resuming from checkpoint..."
-    python3 orchestrator.py --resume
-elif [ "$1" == "--full" ] || [ "$1" == "-f" ]; then
-    echo "Running FULL scrape..."
-    python3 orchestrator.py
 else
-    echo "Usage: $0 [--sample|-s] [--resume|-r] [--full|-f]"
-    echo "  --sample, -s : Run sample scrape (5 products per website)"
-    echo "  --resume, -r : Resume from checkpoint"
-    echo "  --full, -f   : Run full scrape (10 products per website)"
+    # Run with provided categories
+    echo -e "${YELLOW}Running with categories: $@${NC}"
+    python3 orchestrator.py --categories "$@"
+fi
+
+# Check exit code
+if [ $? -eq 0 ]; then
+    echo ""
+    echo -e "${GREEN}✓ Scraping completed successfully${NC}"
+else
+    echo ""
+    echo -e "${RED}✗ Scraping failed${NC}"
     exit 1
 fi
+
+# Deactivate virtual environment
+deactivate
+
+echo ""
+echo -e "${GREEN}Check ./output/ for results${NC}"
 

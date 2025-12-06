@@ -1,185 +1,439 @@
 #!/usr/bin/env python3
 """
-Amazon-specific scraper implementation
+Amazon scraper with pattern learning capabilities
 """
 
+import json
+import logging
 import re
-from typing import List, Dict, Any, Optional
-from urllib.parse import quote_plus
-from base_scraper import BaseScraper
+from typing import Dict, List, Any, Optional
+from urllib.parse import quote_plus, urljoin
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from lxml import html
+
+from .base_scraper import BaseScraper
+from .pattern_learner import PatternLearner
 
 
 class AmazonScraper(BaseScraper):
-    """Scraper for Amazon.com"""
+    """Scraper for Amazon products with learning capabilities"""
     
-    def __init__(self, delay_range=(2.0, 4.0), max_retries=3):
-        super().__init__(delay_range, max_retries)
+    def __init__(self, config: Dict[str, Any], output_dir: str = "./output"):
+        """Initialize Amazon scraper"""
+        super().__init__(config, output_dir)
+        
         self.base_url = "https://www.amazon.com"
+        self.pattern_learner = PatternLearner()
+        
+        # Set up session with retries
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=self.max_retries,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+        
+        # Headers to mimic a browser
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        }
+        
+        # Load existing extraction rules
+        self.extraction_config = self.load_config()
     
     def get_website_name(self) -> str:
+        """Return website name"""
         return "amazon"
     
-    def build_search_url(self, category: str, page: int = 1) -> str:
-        """Build Amazon search URL"""
-        search_query = f"{category}"
-        return f"{self.base_url}/s?k={quote_plus(search_query)}&i=electronics"
-    
-    def scrape_listing_page(self, category: str, max_products: int = 20) -> List[str]:
-        """Scrape product URLs from Amazon search results"""
-        print(f"      📋 Building search URL for category: {category}")
-        search_url = self.build_search_url(category)
+    def search_products_by_category(self, category: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Search for products on Amazon by category
         
-        # First visit homepage to establish session
-        print(f"      🏠 Visiting homepage to establish session...")
+        Args:
+            category: Category data from database
+            
+        Returns:
+            List of product URLs and basic info
+        """
+        category_name = category['name']
+        logging.info(f"Searching Amazon for category: {category_name}")
+        
+        products = []
+        
         try:
-            homepage_response = self._fetch_with_retry(self.base_url)
-        except:
-            pass
-        
-        print(f"      🔍 Searching for products...")
-        response = self._fetch_with_retry(search_url)
-        if not response:
-            print(f"      ✗ Failed to fetch search results")
-            return []
-        
-        soup = self._parse_html(response.content)
-        
-        # Check page title for debugging
-        title = soup.find('title')
-        if title:
-            print(f"      📄 Page title: {title.get_text()[:80]}")
-        
-        # Find product containers
-        print(f"      🔎 Looking for product containers...")
-        product_containers = soup.select('div[data-component-type="s-search-result"]')
-        print(f"      → Method 1 (data-component-type): {len(product_containers)} containers")
-        
-        if not product_containers:
-            product_containers = soup.select('div.s-result-item')
-            print(f"      → Method 2 (s-result-item): {len(product_containers)} containers")
-        
-        if not product_containers:
-            product_containers = soup.select('div[data-asin]')
-            print(f"      → Method 3 (data-asin): {len(product_containers)} containers")
-        
-        if not product_containers:
-            print(f"      ⚠ No product containers found - page structure may have changed")
-        
-        # Extract product URLs
-        product_urls = []
-        print(f"      🔗 Extracting product URLs from {len(product_containers)} containers...")
-        for i, container in enumerate(product_containers[:max_products], 1):
-            link = None
+            # Construct search URL
+            search_query = quote_plus(category_name)
+            search_url = f"{self.base_url}/s?k={search_query}"
             
-            # Method 1: Look for h2 > a structure
-            h2_elem = container.find('h2')
-            if h2_elem:
-                link = h2_elem.find('a')
+            logging.info(f"Search URL: {search_url}")
             
-            # Method 2: Find any link with /dp/ in href
-            if not link:
-                link = container.find('a', href=re.compile(r'/dp/[A-Z0-9]{10}'))
+            # Make request
+            response = self.session.get(
+                search_url,
+                headers=self.headers,
+                timeout=self.timeout
+            )
             
-            # Method 3: Find link in product image container
-            if not link:
-                img_container = container.find('div', class_=lambda x: x and 'image' in str(x).lower())
-                if img_container:
-                    link = img_container.find('a')
+            if response.status_code != 200:
+                logging.error(f"Failed to search: HTTP {response.status_code}")
+                return products
             
-            # Method 4: Find any link with specific Amazon classes
-            if not link:
-                link = container.find('a', class_=lambda x: x and ('link-normal' in str(x) or 'product' in str(x)))
+            # Parse search results
+            tree = html.fromstring(response.content)
             
-            if link and link.get('href'):
-                href = link['href']
-                if href.startswith('/'):
-                    url = f"{self.base_url}{href}"
+            # Find product links - Amazon uses various selectors
+            product_selectors = [
+                '//div[@data-component-type="s-search-result"]//h2/a/@href',
+                '//div[contains(@class, "s-result-item")]//h2/a/@href',
+                '//div[@data-asin]//a[contains(@class, "s-link-style")]/@href'
+            ]
+            
+            product_urls = []
+            for selector in product_selectors:
+                urls = tree.xpath(selector)
+                product_urls.extend(urls)
+                if urls:
+                    logging.info(f"Found {len(urls)} products with selector: {selector}")
+            
+            # Remove duplicates and limit
+            product_urls = list(dict.fromkeys(product_urls))[:10]
+            
+            logging.info(f"Found {len(product_urls)} unique products for {category_name}")
+            
+            for idx, url in enumerate(product_urls):
+                # Ensure full URL
+                if url.startswith('/'):
+                    full_url = urljoin(self.base_url, url)
                 else:
-                    url = href
+                    full_url = url
                 
-                # Ensure it's a product page
-                if '/dp/' in url or '/gp/product/' in url:
-                    product_urls.append(url)
-                    print(f"         [{i}] ✓ Found product URL")
-                else:
-                    print(f"         [{i}] ✗ Skipped non-product URL: {url[:60]}")
+                # Extract ASIN from URL if possible
+                asin_match = re.search(r'/dp/([A-Z0-9]{10})', full_url)
+                asin = asin_match.group(1) if asin_match else None
+                
+                products.append({
+                    'url': full_url,
+                    'asin': asin,
+                    'position': idx + 1,
+                    'category': category_name
+                })
+        
+        except Exception as e:
+            logging.error(f"Error searching for {category_name}: {e}")
+            self.stats['errors'] += 1
+        
+        return products
+    
+    def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Scrape product details from Amazon product page
+        
+        Args:
+            product_url: URL of the product page
+            category: Category data
+            
+        Returns:
+            Product details dictionary
+        """
+        logging.info(f"Scraping product: {product_url}")
+        
+        product_data = {
+            'url': product_url,
+            'category': category['name'],
+            'category_id': category['id'],
+            'title': None,
+            'price': None,
+            'attributes': {},
+            'images': [],
+            'description': None
+        }
+        
+        try:
+            # Make request
+            response = self.session.get(
+                product_url,
+                headers=self.headers,
+                timeout=self.timeout
+            )
+            
+            if response.status_code != 200:
+                logging.error(f"Failed to fetch product: HTTP {response.status_code}")
+                product_data['error'] = f"HTTP {response.status_code}"
+                return product_data
+            
+            html_content = response.text
+            tree = html.fromstring(response.content)
+            
+            # Extract basic info
+            product_data['title'] = self._extract_title(tree)
+            product_data['price'] = self._extract_price(tree)
+            product_data['images'] = self._extract_images(tree)
+            product_data['description'] = self._extract_description(tree)
+            
+            # Analyze page for patterns if we don't have rules for this category yet
+            category_name = category['name']
+            if category_name not in self.extraction_config:
+                logging.info(f"Learning patterns for {category_name}")
+                analysis = self.pattern_learner.analyze_product_page(html_content, product_url)
+                product_data['_analysis'] = analysis
             else:
-                print(f"         [{i}] ✗ No link found in container")
+                logging.info(f"Using existing rules for {category_name}")
+                analysis = None
+            
+            # Extract attributes using learned rules
+            if category_name in self.extraction_config:
+                rules = self.extraction_config[category_name].get('rules', [])
+                attributes = self.pattern_learner.extract_with_rules(html_content, rules)
+                product_data['attributes'] = attributes
+            else:
+                # Try to extract using analysis
+                if analysis and analysis.get('success'):
+                    rules = analysis.get('extraction_rules', [])
+                    if rules:
+                        attributes = self.pattern_learner.extract_with_rules(html_content, rules)
+                        product_data['attributes'] = attributes
+            
+            # Store HTML snippet if no attributes found
+            if not product_data['attributes']:
+                logging.warning(f"No attributes extracted for {product_url}")
+                product_data['_html_snippet'] = html_content[:5000]  # First 5000 chars
+            
+            self.stats['products_scraped'] += 1
+            if product_data['attributes']:
+                self.stats['products_with_attributes'] += 1
         
-        print(f"      ✓ Extracted {len(product_urls)} product URLs")
-        return product_urls
+        except Exception as e:
+            logging.error(f"Error scraping product {product_url}: {e}")
+            product_data['error'] = str(e)
+            self.stats['errors'] += 1
+        
+        return product_data
     
-    def scrape_product_page(self, url: str) -> Optional[Dict[str, Any]]:
-        """Scrape product information from Amazon product page"""
-        response = self._fetch_with_retry(url)
-        if not response:
-            return None
+    def _extract_title(self, tree) -> Optional[str]:
+        """Extract product title"""
+        selectors = [
+            '//span[@id="productTitle"]/text()',
+            '//h1[@id="title"]//text()',
+            '//h1[contains(@class, "product-title")]//text()'
+        ]
         
-        soup = self._parse_html(response.content)
-        return self.extract_product_info(soup, url)
+        for selector in selectors:
+            titles = tree.xpath(selector)
+            if titles:
+                return ' '.join(titles).strip()
+        
+        return None
     
-    def extract_product_info(self, soup, url: str) -> Optional[Dict[str, Any]]:
-        """Extract product information from Amazon page"""
-        print(f"      📦 Extracting product info...")
-        product = {'url': url, 'source': 'amazon'}
+    def _extract_price(self, tree) -> Optional[str]:
+        """Extract product price"""
+        selectors = [
+            '//span[@class="a-price"]//span[@class="a-offscreen"]/text()',
+            '//span[@id="priceblock_ourprice"]/text()',
+            '//span[@id="priceblock_dealprice"]/text()',
+            '//span[contains(@class, "a-price-whole")]/text()'
+        ]
         
-        # Extract ASIN
-        asin_match = re.search(r'/dp/([A-Z0-9]{10})', url)
-        if asin_match:
-            product['asin'] = asin_match.group(1)
-            print(f"         ASIN: {product['asin']}")
+        for selector in selectors:
+            prices = tree.xpath(selector)
+            if prices:
+                return prices[0].strip()
         
-        # Extract title
-        title_elem = soup.find('span', id='productTitle')
-        if not title_elem:
-            title_elem = soup.find('h1', class_='a-size-large')
+        return None
+    
+    def _extract_images(self, tree) -> List[str]:
+        """Extract product images"""
+        images = []
         
-        if title_elem:
-            product['name'] = self._clean_text(title_elem.get_text())
-            print(f"         Title: {product['name'][:60]}...")
-        else:
-            print(f"         ✗ Title not found")
-            return None
+        # Try to find main image
+        img_selectors = [
+            '//img[@id="landingImage"]/@src',
+            '//div[@id="imgTagWrapperId"]//img/@src',
+            '//img[contains(@class, "a-dynamic-image")]/@src'
+        ]
         
-        # Extract price
-        price_elem = soup.find('span', class_='a-price')
-        if price_elem:
-            price_whole = price_elem.find('span', class_='a-price-whole')
-            price_fraction = price_elem.find('span', class_='a-price-fraction')
-            if price_whole:
-                price = self._clean_text(price_whole.get_text()).replace(',', '')
-                if price_fraction:
-                    price += '.' + self._clean_text(price_fraction.get_text())
-                product['price'] = f"${price}"
-                print(f"         Price: {product['price']}")
+        for selector in img_selectors:
+            img_urls = tree.xpath(selector)
+            images.extend(img_urls)
+            if img_urls:
+                break
         
-        if 'price' not in product:
-            print(f"         ⚠ Price not found")
+        return images[:5]  # Limit to 5 images
+    
+    def _extract_description(self, tree) -> Optional[str]:
+        """Extract product description"""
+        selectors = [
+            '//div[@id="productDescription"]//text()',
+            '//div[@id="feature-bullets"]//text()',
+            '//div[contains(@class, "product-description")]//text()'
+        ]
         
-        # Extract rating
-        rating_elem = soup.find('span', class_='a-icon-alt')
-        if rating_elem:
-            rating_text = rating_elem.get_text()
-            rating_match = re.search(r'(\d+\.?\d*)', rating_text)
-            if rating_match:
-                product['rating'] = rating_match.group(1)
-                print(f"         Rating: {product['rating']}")
+        for selector in selectors:
+            desc_parts = tree.xpath(selector)
+            if desc_parts:
+                description = ' '.join([p.strip() for p in desc_parts if p.strip()])
+                if description:
+                    return description[:1000]  # Limit length
         
-        # Extract review count
-        reviews_elem = soup.find('span', id='acrCustomerReviewText')
-        if reviews_elem:
-            reviews_text = reviews_elem.get_text()
-            reviews_match = re.search(r'([\d,]+)', reviews_text)
-            if reviews_match:
-                product['review_count'] = reviews_match.group(1).replace(',', '')
-                print(f"         Reviews: {product['review_count']}")
+        return None
+    
+    def process_category(self, category: Dict[str, Any], max_products: int = 10) -> Dict[str, Any]:
+        """
+        Process a complete category: search, scrape, learn patterns
         
-        # Extract images
-        image_elem = soup.find('img', id='landingImage')
-        if image_elem and image_elem.get('src'):
-            product['image_url'] = image_elem['src']
-            print(f"         Image: ✓")
+        Args:
+            category: Category data from database
+            max_products: Maximum number of products to scrape
+            
+        Returns:
+            Processing results
+        """
+        category_name = category['name']
+        logging.info(f"\n{'='*60}")
+        logging.info(f"Processing category: {category_name}")
+        logging.info(f"{'='*60}")
         
-        print(f"      ✓ Product info extracted")
-        return product
+        log_data = {
+            'category': category_name,
+            'category_id': category['id'],
+            'products_found': 0,
+            'products_scraped': 0,
+            'products_with_attributes': 0,
+            'patterns_learned': False,
+            'products': [],
+            'errors': []
+        }
+        
+        try:
+            # Step 1: Search for products
+            products = self.search_products_by_category(category)
+            log_data['products_found'] = len(products)
+            
+            if not products:
+                logging.warning(f"No products found for {category_name}")
+                self.save_log(category_name, log_data)
+                return log_data
+            
+            # Limit products
+            products = products[:max_products]
+            
+            # Step 2: Scrape product details
+            scraped_products = []
+            analyses = []
+            
+            for idx, product_info in enumerate(products, 1):
+                logging.info(f"\nScraping product {idx}/{len(products)}")
+                
+                product_data = self.scrape_product_details(product_info['url'], category)
+                product_data.update(product_info)  # Add search info
+                
+                scraped_products.append(product_data)
+                
+                # Collect analysis if present
+                if '_analysis' in product_data and product_data['_analysis'].get('success'):
+                    analyses.append(product_data['_analysis'])
+                
+                # Wait between requests
+                if idx < len(products):
+                    self.wait_between_requests()
+            
+            log_data['products_scraped'] = len(scraped_products)
+            log_data['products_with_attributes'] = sum(
+                1 for p in scraped_products if p.get('attributes')
+            )
+            log_data['products'] = scraped_products
+            
+            # Step 3: Learn patterns if we have analyses
+            if analyses and category_name not in self.extraction_config:
+                logging.info(f"\nLearning patterns from {len(analyses)} products")
+                learned_patterns = self.pattern_learner.learn_patterns(analyses, category_name)
+                
+                if learned_patterns['patterns_found']:
+                    # Save learned patterns to config
+                    self.extraction_config[category_name] = learned_patterns
+                    self.save_config(self.extraction_config)
+                    log_data['patterns_learned'] = True
+                    log_data['learned_patterns'] = learned_patterns
+                    
+                    logging.info(f"✓ Learned {len(learned_patterns['rules'])} patterns for {category_name}")
+                else:
+                    logging.warning(f"No patterns learned for {category_name}")
+                    
+                    # Save HTML content for manual analysis
+                    for product in scraped_products:
+                        if '_html_snippet' in product:
+                            self.save_analyze_content(
+                                category_name,
+                                product['_html_snippet'],
+                                suffix=f"_{product.get('asin', 'unknown')}"
+                            )
+            
+            # Step 4: Save products
+            # Remove temporary analysis data before saving
+            for product in scraped_products:
+                product.pop('_analysis', None)
+                product.pop('_html_snippet', None)
+            
+            self.save_products(scraped_products)
+            
+            # Step 5: Save log
+            self.save_log(category_name, log_data)
+            
+            self.stats['categories_processed'] += 1
+            
+            logging.info(f"\n✓ Completed processing {category_name}")
+            logging.info(f"  Products found: {log_data['products_found']}")
+            logging.info(f"  Products scraped: {log_data['products_scraped']}")
+            logging.info(f"  Products with attributes: {log_data['products_with_attributes']}")
+            logging.info(f"  Patterns learned: {log_data['patterns_learned']}")
+        
+        except Exception as e:
+            logging.error(f"Error processing category {category_name}: {e}")
+            log_data['errors'].append(str(e))
+            self.save_log(category_name, log_data)
+            self.stats['errors'] += 1
+        
+        return log_data
+
+
+def main():
+    """Test the Amazon scraper"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    
+    # Test configuration
+    config = {
+        'rate_limiting': {
+            'delay_range': [2, 4],
+            'max_retries': 3,
+            'timeout': 15
+        }
+    }
+    
+    # Test categories
+    test_categories = [
+        {'id': 1, 'name': 'Laptop', 'product_def_id': 1},
+        {'id': 2, 'name': 'Smartphone', 'product_def_id': 2}
+    ]
+    
+    scraper = AmazonScraper(config, output_dir="../output")
+    
+    for category in test_categories:
+        result = scraper.process_category(category, max_products=3)
+        print(f"\nProcessed {category['name']}: {result['products_scraped']} products")
+
+
+if __name__ == "__main__":
+    main()
 

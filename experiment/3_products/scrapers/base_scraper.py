@@ -1,254 +1,218 @@
 #!/usr/bin/env python3
 """
-Base scraper framework with common functionality for all website scrapers
+Base scraper class with common functionality for all website scrapers
 """
 
+import json
+import os
 import time
 import random
-import requests
+from typing import Dict, List, Any, Optional
 from abc import ABC, abstractmethod
-from bs4 import BeautifulSoup
-from typing import List, Dict, Any, Optional, Tuple
-from urllib.parse import urljoin, quote_plus
+import logging
 
 
 class BaseScraper(ABC):
-    """Abstract base class for website scrapers"""
+    """Base class for all website scrapers"""
     
-    def __init__(self, delay_range: Tuple[float, float] = (1.0, 3.0), max_retries: int = 3):
+    def __init__(self, config: Dict[str, Any], output_dir: str = "./output"):
         """
         Initialize base scraper
         
         Args:
-            delay_range: Tuple of (min_delay, max_delay) in seconds between requests
-            max_retries: Maximum number of retry attempts for failed requests
+            config: Configuration dictionary
+            output_dir: Directory for output files
         """
-        self.delay_range = delay_range
-        self.max_retries = max_retries
-        self.session = self._create_session()
-        self.last_request_time = 0
-    
-    def _create_session(self) -> requests.Session:
-        """Create a requests session with realistic headers"""
-        session = requests.Session()
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0',
-            'DNT': '1',
-        })
-        return session
-    
-    def _rate_limit(self):
-        """Enforce rate limiting between requests"""
-        elapsed = time.time() - self.last_request_time
-        delay = random.uniform(*self.delay_range)
+        self.config = config
+        self.output_dir = output_dir
+        self.config_dir = os.path.join(os.path.dirname(output_dir), "config")
         
-        if elapsed < delay:
-            time.sleep(delay - elapsed)
+        # Create output directories if they don't exist
+        os.makedirs(self.output_dir, exist_ok=True)
+        os.makedirs(self.config_dir, exist_ok=True)
         
-        self.last_request_time = time.time()
-    
-    def _fetch_with_retry(self, url: str, timeout: int = 15) -> Optional[requests.Response]:
-        """
-        Fetch URL with retry logic and exponential backoff
+        # Rate limiting settings
+        self.rate_limit = config.get('rate_limiting', {})
+        self.delay_range = self.rate_limit.get('delay_range', [1.5, 3.5])
+        self.max_retries = self.rate_limit.get('max_retries', 3)
+        self.timeout = self.rate_limit.get('timeout', 15)
         
-        Args:
-            url: URL to fetch
-            timeout: Request timeout in seconds
-        
-        Returns:
-            Response object or None if all retries failed
-        """
-        print(f"      → Fetching: {url[:100]}")
-        
-        for attempt in range(self.max_retries):
-            try:
-                self._rate_limit()
-                
-                response = self.session.get(url, timeout=timeout, allow_redirects=True)
-                
-                if response.status_code == 200:
-                    print(f"      ✓ Success (200) - Content length: {len(response.content)} bytes")
-                    return response
-                elif response.status_code == 503:
-                    # Service unavailable - wait longer and retry
-                    wait_time = (2 ** attempt) * random.uniform(2, 4)
-                    print(f"      ⚠ Got 503 Service Unavailable, waiting {wait_time:.1f}s before retry {attempt + 1}/{self.max_retries}")
-                    time.sleep(wait_time)
-                elif response.status_code == 403:
-                    print(f"      ⚠ Got 403 Forbidden (possible blocking) - attempt {attempt + 1}/{self.max_retries}")
-                    if attempt < self.max_retries - 1:
-                        wait_time = (2 ** attempt) * random.uniform(3, 5)
-                        time.sleep(wait_time)
-                elif response.status_code == 404:
-                    print(f"      ✗ Got 404 Not Found - skipping retries")
-                    return None
-                else:
-                    print(f"      ⚠ Got status code {response.status_code} - attempt {attempt + 1}/{self.max_retries}")
-                    if attempt < self.max_retries - 1:
-                        wait_time = (2 ** attempt) * random.uniform(1, 2)
-                        time.sleep(wait_time)
-            
-            except requests.exceptions.Timeout:
-                print(f"      ⚠ Timeout on attempt {attempt + 1}/{self.max_retries}")
-                if attempt < self.max_retries - 1:
-                    time.sleep((2 ** attempt) * random.uniform(1, 2))
-            
-            except requests.exceptions.RequestException as e:
-                error_msg = str(e)
-                if len(error_msg) > 100:
-                    error_msg = error_msg[:100] + "..."
-                print(f"      ✗ Request error (attempt {attempt + 1}/{self.max_retries}): {error_msg}")
-                if attempt < self.max_retries - 1:
-                    time.sleep((2 ** attempt) * random.uniform(1, 2))
-        
-        print(f"      ✗ All {self.max_retries} attempts failed")
-        return None
-    
-    def _parse_html(self, content: bytes) -> BeautifulSoup:
-        """
-        Parse HTML content with BeautifulSoup
-        
-        Args:
-            content: Raw HTML content
-        
-        Returns:
-            BeautifulSoup object
-        """
-        return BeautifulSoup(content, 'html.parser')
-    
-    def _clean_text(self, text: str) -> str:
-        """
-        Clean extracted text by removing extra whitespace
-        
-        Args:
-            text: Raw text
-        
-        Returns:
-            Cleaned text
-        """
-        import re
-        # Replace multiple whitespace with single space
-        text = re.sub(r'\s+', ' ', text)
-        return text.strip()
+        # Statistics
+        self.stats = {
+            'categories_processed': 0,
+            'products_scraped': 0,
+            'products_with_attributes': 0,
+            'errors': 0
+        }
     
     @abstractmethod
     def get_website_name(self) -> str:
-        """Return the name of the website (e.g., 'amazon', 'flipkart')"""
+        """Return the website name (e.g., 'amazon', 'flipkart')"""
         pass
     
     @abstractmethod
-    def build_search_url(self, category: str, page: int = 1) -> str:
+    def search_products_by_category(self, category: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        Build search URL for a category
+        Search for products in a given category
         
         Args:
-            category: Category name to search
-            page: Page number (default 1)
-        
-        Returns:
-            Search URL
-        """
-        pass
-    
-    @abstractmethod
-    def scrape_listing_page(self, category: str, max_products: int = 20) -> List[str]:
-        """
-        Scrape product URLs from listing page
-        
-        Args:
-            category: Category name to search
-            max_products: Maximum number of product URLs to return
-        
-        Returns:
-            List of product URLs
-        """
-        pass
-    
-    @abstractmethod
-    def scrape_product_page(self, url: str) -> Optional[Dict[str, Any]]:
-        """
-        Scrape detailed product information from product page
-        
-        Args:
-            url: Product page URL
-        
-        Returns:
-            Dictionary with product information or None if failed
-        """
-        pass
-    
-    @abstractmethod
-    def extract_product_info(self, soup: BeautifulSoup, url: str) -> Optional[Dict[str, Any]]:
-        """
-        Extract product information from parsed HTML
-        
-        Args:
-            soup: BeautifulSoup object of product page
-            url: Product URL
-        
-        Returns:
-            Dictionary with basic product information
-        """
-        pass
-    
-    def scrape_category(self, category: str, max_products: int = 20) -> List[Dict[str, Any]]:
-        """
-        High-level method to scrape products from a category
-        
-        Args:
-            category: Category name
-            max_products: Maximum number of products to scrape
-        
-        Returns:
-            List of product dictionaries
-        """
-        print(f"\n  Scraping {self.get_website_name()} for category: {category}")
-        
-        # Get product URLs from listing
-        product_urls = self.scrape_listing_page(category, max_products)
-        
-        if not product_urls:
-            print(f"    ✗ No products found")
-            return []
-        
-        print(f"    Found {len(product_urls)} product URLs")
-        
-        # Scrape each product
-        products = []
-        for i, url in enumerate(product_urls, 1):
-            print(f"    [{i}/{len(product_urls)}] Scraping: {url[:80]}...")
+            category: Category data from database
             
-            product = self.scrape_product_page(url)
-            if product:
-                products.append(product)
-                print(f"      ✓ Success")
-            else:
-                print(f"      ✗ Failed")
+        Returns:
+            List of product data dictionaries
+        """
+        pass
+    
+    @abstractmethod
+    def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Scrape details from a product page
         
-        print(f"    Total scraped: {len(products)}/{len(product_urls)} products")
-        return products
-
-
-class ScraperError(Exception):
-    """Custom exception for scraper errors"""
-    pass
-
-
-class RateLimitError(ScraperError):
-    """Exception raised when rate limit is exceeded"""
-    pass
-
-
-class ParsingError(ScraperError):
-    """Exception raised when HTML parsing fails"""
-    pass
+        Args:
+            product_url: URL of the product page
+            category: Category data for context
+            
+        Returns:
+            Dictionary containing product details and attributes
+        """
+        pass
+    
+    def wait_between_requests(self):
+        """Wait a random amount of time between requests"""
+        delay = random.uniform(self.delay_range[0], self.delay_range[1])
+        time.sleep(delay)
+    
+    def save_log(self, category_name: str, log_data: Dict[str, Any]):
+        """
+        Save log file for a category
+        
+        Args:
+            category_name: Name of the category
+            log_data: Log data to save
+        """
+        safe_name = self._sanitize_filename(category_name)
+        website = self.get_website_name()
+        log_file = os.path.join(self.output_dir, f"{website}_{safe_name}_log.json")
+        
+        with open(log_file, 'w', encoding='utf-8') as f:
+            json.dump(log_data, f, indent=2, ensure_ascii=False)
+        
+        logging.info(f"Saved log to {log_file}")
+    
+    def save_analyze_content(self, category_name: str, content: str, suffix: str = ""):
+        """
+        Save content for manual analysis
+        
+        Args:
+            category_name: Name of the category
+            content: HTML or text content to analyze
+            suffix: Optional suffix for the filename
+        """
+        safe_name = self._sanitize_filename(category_name)
+        website = self.get_website_name()
+        filename = f"{website}_{safe_name}_analyze{suffix}.txt"
+        analyze_file = os.path.join(self.config_dir, filename)
+        
+        with open(analyze_file, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        logging.info(f"Saved content for analysis to {analyze_file}")
+        return analyze_file
+    
+    def save_config(self, config_data: Dict[str, Any]):
+        """
+        Save extraction configuration
+        
+        Args:
+            config_data: Configuration data to save
+        """
+        website = self.get_website_name()
+        config_file = os.path.join(self.config_dir, f"{website}_config.json")
+        
+        # Load existing config if it exists
+        existing_config = {}
+        if os.path.exists(config_file):
+            with open(config_file, 'r', encoding='utf-8') as f:
+                existing_config = json.load(f)
+        
+        # Merge with new config
+        existing_config.update(config_data)
+        
+        # Save merged config
+        with open(config_file, 'w', encoding='utf-8') as f:
+            json.dump(existing_config, f, indent=2, ensure_ascii=False)
+        
+        logging.info(f"Saved config to {config_file}")
+    
+    def load_config(self) -> Dict[str, Any]:
+        """
+        Load extraction configuration if it exists
+        
+        Returns:
+            Configuration dictionary or empty dict
+        """
+        website = self.get_website_name()
+        config_file = os.path.join(self.config_dir, f"{website}_config.json")
+        
+        if os.path.exists(config_file):
+            with open(config_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        
+        return {}
+    
+    def save_products(self, products: List[Dict[str, Any]]):
+        """
+        Append products to the output file
+        
+        Args:
+            products: List of product dictionaries
+        """
+        website = self.get_website_name()
+        products_file = os.path.join(self.output_dir, f"{website}_products.json")
+        
+        # Load existing products if file exists
+        existing_products = []
+        if os.path.exists(products_file):
+            with open(products_file, 'r', encoding='utf-8') as f:
+                try:
+                    existing_products = json.load(f)
+                except json.JSONDecodeError:
+                    existing_products = []
+        
+        # Append new products
+        existing_products.extend(products)
+        
+        # Save all products
+        with open(products_file, 'w', encoding='utf-8') as f:
+            json.dump(existing_products, f, indent=2, ensure_ascii=False)
+        
+        logging.info(f"Saved {len(products)} products to {products_file} (total: {len(existing_products)})")
+    
+    def _sanitize_filename(self, name: str) -> str:
+        """
+        Sanitize a string to be used as a filename
+        
+        Args:
+            name: String to sanitize
+            
+        Returns:
+            Sanitized string
+        """
+        # Replace spaces and special characters
+        safe = name.replace(' ', '_').replace("'", '').replace('"', '')
+        safe = ''.join(c for c in safe if c.isalnum() or c in ('_', '-'))
+        return safe.lower()
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Return scraping statistics"""
+        return self.stats.copy()
+    
+    def reset_stats(self):
+        """Reset statistics counters"""
+        self.stats = {
+            'categories_processed': 0,
+            'products_scraped': 0,
+            'products_with_attributes': 0,
+            'errors': 0
+        }
 

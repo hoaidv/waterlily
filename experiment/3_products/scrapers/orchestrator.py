@@ -1,346 +1,279 @@
 #!/usr/bin/env python3
 """
-Main scraping orchestrator that coordinates category scraping across all websites
+Orchestrator for running scrapers across multiple categories
 """
 
 import json
+import logging
 import os
 import sys
-import time
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Dict, List, Any, Optional
 
 # Add parent directories to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
-# Import utilities
-try:
-    from utils.db_connector import DatabaseConnection, get_target_categories
-except ImportError:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'utils'))
-    from db_connector import DatabaseConnection, get_target_categories
-
-# Import scrapers
-from amazon_scraper import AmazonScraper
-from flipkart_scraper import FlipkartScraper
-from newegg_scraper import NeweggScraper
-from craigslist_scraper import CraigslistScraper
-from attribute_extractor import AttributeExtractor
+from utils.db_connector import DatabaseConnection, get_target_categories, load_categories
+from scrapers.amazon_scraper import AmazonScraper
 
 
-class ScrapingOrchestrator:
-    """Orchestrates scraping across multiple websites and categories"""
+class ScraperOrchestrator:
+    """Orchestrates scraping across multiple categories and websites"""
     
-    def __init__(self, config_file: Optional[str] = None):
-        """Initialize orchestrator with configuration"""
-        if config_file is None:
-            config_file = os.path.join(os.path.dirname(__file__), '..', 'config', 'scraping_config.json')
+    def __init__(self, config_file: str = "../config/scraping_config.json"):
+        """
+        Initialize orchestrator
         
-        with open(config_file, 'r') as f:
-            self.config = json.load(f)
+        Args:
+            config_file: Path to configuration file
+        """
+        self.config_file = config_file
+        self.config = self._load_config()
+        
+        # Setup logging
+        self._setup_logging()
         
         # Initialize scrapers
-        delay_range = tuple(self.config['rate_limiting']['delay_range'])
-        max_retries = self.config['rate_limiting']['max_retries']
+        self.scrapers = {}
+        self._initialize_scrapers()
         
-        self.scrapers = {
-            'amazon': AmazonScraper(delay_range, max_retries),
-            'flipkart': FlipkartScraper(delay_range, max_retries),
-            'newegg': NeweggScraper(delay_range, max_retries),
-            'craigslist': CraigslistScraper(delay_range, max_retries, 
-                                           self.config['craigslist']['location'])
-        }
-        
-        # Initialize attribute extractor
-        config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
-        self.attribute_extractor = AttributeExtractor(config_dir)
-        
-        # Results storage
-        self.scraped_products = []
+        # Statistics
         self.stats = {
+            'start_time': None,
+            'end_time': None,
             'categories_processed': 0,
-            'products_scraped': 0,
-            'products_with_attributes': 0,
-            'websites_scraped': {},
-            'errors': []
+            'total_products_scraped': 0,
+            'total_products_with_attributes': 0,
+            'errors': 0
         }
-        
-        # Checkpoint
-        self.checkpoint_file = os.path.join(os.path.dirname(__file__), 
-                                           self.config['checkpoint']['file'])
-        self.checkpoint_interval = self.config['checkpoint']['interval']
     
-    def load_categories_from_db(self) -> List[Dict[str, Any]]:
-        """Load target categories and their attributes from database"""
-        with DatabaseConnection() as cursor:
-            target_names = self.config['target_categories']
-            categories = get_target_categories(cursor, target_names)
-            return categories
-    
-    def scrape_product_with_attributes(self, scraper, product_url: str, 
-                                      category: Dict[str, Any],
-                                      website: str) -> Optional[Dict[str, Any]]:
-        """Scrape product and extract attributes"""
-        print(f"\n      🔍 Scraping product from {website}...")
+    def _load_config(self) -> Dict[str, Any]:
+        """Load configuration from file"""
+        config_path = os.path.join(os.path.dirname(__file__), self.config_file)
         
-        # Get product basic info
-        product = scraper.scrape_product_page(product_url)
-        
-        if not product:
-            print(f"      ✗ Failed to extract basic product info")
-            return None
-        
-        print(f"      ✓ Basic info extracted: {product.get('name', 'N/A')[:60]}")
-        
-        # Parse HTML for attribute extraction
-        print(f"      🔄 Re-fetching page for attribute extraction...")
-        response = scraper._fetch_with_retry(product_url)
-        if not response:
-            print(f"      ⚠ Could not re-fetch page, returning basic info only")
-            return product  # Return basic info even if we can't extract attributes
-        
-        soup = scraper._parse_html(response.content)
-        
-        # Extract attributes using configuration
-        extracted_attributes = self.attribute_extractor.extract_attributes(
-            soup, 
-            product, 
-            category['name'],
-            website,
-            category.get('attributes', [])
-        )
-        
-        product['attributes'] = extracted_attributes
-        product['category_id'] = category['id']
-        product['category_name'] = category['name']
-        product['product_def_id'] = category.get('product_def_id')
-        
-        # Calculate attribute coverage
-        required_attrs = len(category.get('attributes', []))
-        extracted_attrs = len(extracted_attributes)
-        product['attribute_coverage'] = extracted_attrs / required_attrs if required_attrs > 0 else 0
-        
-        print(f"      📊 Attribute coverage: {extracted_attrs}/{required_attrs} ({product['attribute_coverage']:.1%})")
-        
-        return product
-    
-    def scrape_category(self, category: Dict[str, Any], websites: List[str], 
-                       sample_mode: bool = False) -> List[Dict[str, Any]]:
-        """Scrape a category from multiple websites"""
-        category_name = category['name']
-        category_id = category['id']
-        attributes = category.get('attributes', [])
-        
-        print(f"\n{'=' * 60}")
-        print(f"Scraping category: {category_name} (ID: {category_id})")
-        print(f"Required attributes: {len(attributes)}")
-        print(f"{'=' * 60}")
-        
-        category_products = []
-        
-        # Determine products per website
-        if sample_mode:
-            products_per_website = self.config['sample_mode']['products_per_website']
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                return json.load(f)
         else:
-            products_per_website = self.config['products_per_category_per_website']
-        
-        for website in websites:
-            if website not in self.scrapers:
-                print(f"  ✗ Unknown website: {website}")
-                continue
-            
-            scraper = self.scrapers[website]
-            print(f"\n  Website: {website}")
-            
-            try:
-                # Get product URLs from listing page
-                product_urls = scraper.scrape_listing_page(category_name, products_per_website)
-                
-                if not product_urls:
-                    print(f"    ✗ No products found")
-                    self.stats['websites_scraped'][website] = self.stats['websites_scraped'].get(website, 0)
-                    continue
-                
-                print(f"    Found {len(product_urls)} product URLs")
-                
-                # Scrape each product with attributes
-                for i, product_url in enumerate(product_urls, 1):
-                    print(f"\n    {'='*70}")
-                    print(f"    [{i}/{len(product_urls)}] Product URL: {product_url[:100]}")
-                    print(f"    {'='*70}")
-                    
-                    product_info = self.scrape_product_with_attributes(
-                        scraper, product_url, category, website
-                    )
-                    
-                    if product_info:
-                        category_products.append(product_info)
-                        
-                        coverage = product_info.get('attribute_coverage', 0)
-                        attr_count = len(product_info.get('attributes', {}))
-                        
-                        # Show extracted attributes
-                        print(f"\n      📋 Extracted Attributes:")
-                        for attr_name, attr_value in product_info.get('attributes', {}).items():
-                            value_str = str(attr_value)[:50]
-                            print(f"         • {attr_name}: {value_str}")
-                        
-                        print(f"\n      ✅ SUCCESS: {attr_count}/{len(attributes)} attributes ({coverage:.1%})")
-                        
-                        # Track stats
-                        if product_info.get('attributes'):
-                            self.stats['products_with_attributes'] += 1
-                    else:
-                        print(f"\n      ❌ FAILED: Could not scrape product")
-                
-                # Track website stats
-                self.stats['websites_scraped'][website] = self.stats['websites_scraped'].get(website, 0) + len(category_products)
-            
-            except Exception as e:
-                error_msg = f"Error scraping {website} for category {category_name}: {e}"
-                print(f"    ✗ {error_msg}")
-                self.stats['errors'].append(error_msg)
-                import traceback
-                traceback.print_exc()
-                continue
-        
-        return category_products
+            logging.warning(f"Config file not found: {config_path}")
+            return self._default_config()
     
-    def save_checkpoint(self):
-        """Save checkpoint to file"""
-        checkpoint_data = {
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'stats': self.stats.copy(),
-            'products': self.scraped_products,
-            'config': self.config
+    def _default_config(self) -> Dict[str, Any]:
+        """Return default configuration"""
+        return {
+            'target_categories': [],
+            'websites': ['amazon'],
+            'products_per_category_per_website': 10,
+            'rate_limiting': {
+                'delay_range': [2.0, 4.0],
+                'max_retries': 3,
+                'timeout': 15
+            },
+            'output': {
+                'directory': '../output'
+            }
         }
-        
-        with open(self.checkpoint_file, 'w', encoding='utf-8') as f:
-            json.dump(checkpoint_data, f, indent=2, ensure_ascii=False)
-        
-        print(f"\n✓ Checkpoint saved: {len(self.scraped_products)} products")
     
-    def load_checkpoint(self) -> bool:
-        """Load checkpoint from file"""
-        if not os.path.exists(self.checkpoint_file):
-            return False
-        
-        try:
-            with open(self.checkpoint_file, 'r', encoding='utf-8') as f:
-                checkpoint_data = json.load(f)
-            
-            self.scraped_products = checkpoint_data.get('products', [])
-            self.stats = checkpoint_data.get('stats', self.stats)
-            
-            print(f"✓ Loaded checkpoint: {len(self.scraped_products)} products")
-            return True
-        except Exception as e:
-            print(f"✗ Error loading checkpoint: {e}")
-            return False
-    
-    def save_results(self):
-        """Save scraped products to output file"""
-        output_config = self.config['output']
-        output_dir = os.path.join(os.path.dirname(__file__), '..', output_config['directory'])
-        
-        # Ensure output directory exists
+    def _setup_logging(self):
+        """Setup logging configuration"""
+        output_dir = os.path.join(
+            os.path.dirname(__file__),
+            self.config.get('output', {}).get('directory', '../output')
+        )
         os.makedirs(output_dir, exist_ok=True)
         
-        output_file = os.path.join(output_dir, output_config['file'])
+        log_file = os.path.join(output_dir, 'orchestrator.log')
         
-        results = {
-            'metadata': {
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'total_products': len(self.scraped_products),
-                'categories': self.config['target_categories'],
-                'websites': self.config['websites']
-            },
-            'stats': self.stats,
-            'products': self.scraped_products
-        }
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(log_file, encoding='utf-8'),
+                logging.StreamHandler(sys.stdout)
+            ]
+        )
         
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
-        
-        print(f"\n✓ Saved {len(self.scraped_products)} products to {output_file}")
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("=" * 80)
+        self.logger.info("AMAZON SCRAPER ORCHESTRATOR")
+        self.logger.info("=" * 80)
     
-    def run(self, sample_mode: bool = False, resume_from_checkpoint: bool = False):
-        """Run the scraping orchestrator"""
-        print("=" * 60)
-        print("Product Scraping Orchestrator")
-        print("=" * 60)
+    def _initialize_scrapers(self):
+        """Initialize website scrapers"""
+        output_dir = os.path.join(
+            os.path.dirname(__file__),
+            self.config.get('output', {}).get('directory', '../output')
+        )
         
-        # Load checkpoint if resuming
-        if resume_from_checkpoint:
-            self.load_checkpoint()
+        websites = self.config.get('websites', ['amazon'])
+        
+        for website in websites:
+            if website.lower() == 'amazon':
+                self.scrapers['amazon'] = AmazonScraper(
+                    self.config,
+                    output_dir=output_dir
+                )
+                self.logger.info(f"✓ Initialized Amazon scraper")
+            # Add more scrapers here as needed
+    
+    def load_categories_from_db(self, category_names: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """
+        Load categories from database
+        
+        Args:
+            category_names: Optional list of specific category names to load
+            
+        Returns:
+            List of category dictionaries
+        """
+        self.logger.info("Loading categories from database...")
+        
+        try:
+            with DatabaseConnection() as cursor:
+                if category_names:
+                    categories = get_target_categories(cursor, category_names)
+                    self.logger.info(f"Loaded {len(categories)} target categories")
+                else:
+                    categories_dict = load_categories(cursor)
+                    categories = list(categories_dict.values())
+                    self.logger.info(f"Loaded {len(categories)} total categories")
+                
+                return categories
+        
+        except Exception as e:
+            self.logger.error(f"Failed to load categories from database: {e}")
+            return []
+    
+    def run(self, category_names: Optional[List[str]] = None):
+        """
+        Run scraping orchestrator
+        
+        Args:
+            category_names: Optional list of category names to scrape
+                           If None, uses target_categories from config
+        """
+        self.stats['start_time'] = datetime.now()
+        self.logger.info(f"Starting scraping run at {self.stats['start_time']}")
+        
+        # Get categories
+        if category_names is None:
+            category_names = self.config.get('target_categories', [])
+        
+        if not category_names:
+            self.logger.error("No target categories specified")
+            return
+        
+        self.logger.info(f"Target categories: {', '.join(category_names)}")
         
         # Load categories from database
-        print("\nLoading categories from database...")
-        categories = self.load_categories_from_db()
-        print(f"✓ Loaded {len(categories)} categories")
+        categories = self.load_categories_from_db(category_names)
+        
+        if not categories:
+            self.logger.error("No categories loaded from database")
+            return
+        
+        # Process each category with each scraper
+        max_products = self.config.get('products_per_category_per_website', 10)
         
         for category in categories:
-            print(f"  - {category['name']}: {len(category.get('attributes', []))} attributes")
-        
-        # Get websites to scrape
-        websites = self.config['websites']
-        print(f"\nWebsites: {', '.join(websites)}")
-        
-        if sample_mode:
-            print(f"\n⚠️  SAMPLE MODE: Scraping {self.config['sample_mode']['products_per_website']} products per website")
-        
-        # Scrape each category
-        for category in categories:
-            category_products = self.scrape_category(category, websites, sample_mode)
-            self.scraped_products.extend(category_products)
-            self.stats['categories_processed'] += 1
-            self.stats['products_scraped'] += len(category_products)
+            category_name = category['name']
+            self.logger.info(f"\n{'='*80}")
+            self.logger.info(f"CATEGORY: {category_name}")
+            self.logger.info(f"{'='*80}")
             
-            # Save checkpoint periodically
-            if self.config['checkpoint']['enabled']:
-                if len(self.scraped_products) >= self.checkpoint_interval:
-                    self.save_checkpoint()
+            for website, scraper in self.scrapers.items():
+                self.logger.info(f"\nProcessing with {website} scraper...")
+                
+                try:
+                    result = scraper.process_category(category, max_products=max_products)
+                    
+                    # Update statistics
+                    self.stats['categories_processed'] += 1
+                    self.stats['total_products_scraped'] += result.get('products_scraped', 0)
+                    self.stats['total_products_with_attributes'] += result.get('products_with_attributes', 0)
+                    
+                    self.logger.info(f"✓ Completed {category_name} on {website}")
+                    self.logger.info(f"  Products scraped: {result.get('products_scraped', 0)}")
+                    self.logger.info(f"  Products with attributes: {result.get('products_with_attributes', 0)}")
+                
+                except Exception as e:
+                    self.logger.error(f"Error processing {category_name} on {website}: {e}")
+                    self.stats['errors'] += 1
         
-        # Final checkpoint
-        if self.config['checkpoint']['enabled']:
-            self.save_checkpoint()
+        # Finalize
+        self.stats['end_time'] = datetime.now()
+        duration = self.stats['end_time'] - self.stats['start_time']
         
-        # Save results
-        self.save_results()
+        self.logger.info(f"\n{'='*80}")
+        self.logger.info("SCRAPING RUN COMPLETED")
+        self.logger.info(f"{'='*80}")
+        self.logger.info(f"Duration: {duration}")
+        self.logger.info(f"Categories processed: {self.stats['categories_processed']}")
+        self.logger.info(f"Total products scraped: {self.stats['total_products_scraped']}")
+        self.logger.info(f"Products with attributes: {self.stats['total_products_with_attributes']}")
+        self.logger.info(f"Errors: {self.stats['errors']}")
         
-        # Print final stats
-        print("\n" + "=" * 60)
-        print("Scraping Complete!")
-        print("=" * 60)
-        print(f"Categories processed: {self.stats['categories_processed']}")
-        print(f"Products scraped: {self.stats['products_scraped']}")
-        print(f"Products with attributes: {self.stats['products_with_attributes']}")
+        # Save statistics
+        self._save_statistics()
+    
+    def _save_statistics(self):
+        """Save run statistics"""
+        output_dir = os.path.join(
+            os.path.dirname(__file__),
+            self.config.get('output', {}).get('directory', '../output')
+        )
         
-        print("\nProducts per website:")
-        for website, count in self.stats['websites_scraped'].items():
-            print(f"  {website}: {count}")
+        stats_file = os.path.join(output_dir, 'scraping_statistics.json')
         
-        print(f"\nErrors: {len(self.stats['errors'])}")
-        if self.stats['errors']:
-            print("\nFirst 5 errors:")
-            for error in self.stats['errors'][:5]:
-                print(f"  - {error}")
+        # Convert datetime to string
+        stats_to_save = self.stats.copy()
+        stats_to_save['start_time'] = str(stats_to_save['start_time'])
+        stats_to_save['end_time'] = str(stats_to_save['end_time'])
+        
+        with open(stats_file, 'w', encoding='utf-8') as f:
+            json.dump(stats_to_save, f, indent=2)
+        
+        self.logger.info(f"✓ Saved statistics to {stats_file}")
 
 
 def main():
-    """Main function"""
+    """Main entry point"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Scrape products from multiple websites')
-    parser.add_argument('--sample', action='store_true', help='Run in sample mode (fewer products)')
-    parser.add_argument('--resume', action='store_true', help='Resume from checkpoint')
-    parser.add_argument('--config', type=str, help='Path to config file')
+    parser = argparse.ArgumentParser(description='Amazon Product Scraper with Pattern Learning')
+    parser.add_argument(
+        '--categories',
+        nargs='+',
+        help='Category names to scrape (e.g., "Laptop" "Smartphone")'
+    )
+    parser.add_argument(
+        '--config',
+        default='../config/scraping_config.json',
+        help='Path to configuration file'
+    )
+    parser.add_argument(
+        '--sample',
+        action='store_true',
+        help='Run in sample mode with predefined categories'
+    )
     
     args = parser.parse_args()
     
-    orchestrator = ScrapingOrchestrator(args.config)
-    orchestrator.run(sample_mode=args.sample, resume_from_checkpoint=args.resume)
+    # Initialize orchestrator
+    orchestrator = ScraperOrchestrator(config_file=args.config)
+    
+    # Determine categories
+    if args.sample:
+        # Use sample categories for testing
+        sample_categories = ['Laptop', 'Smartphone', 'Headphones', 'Smart Watch', 'Tablet']
+        print(f"\n🔬 Running in SAMPLE MODE with categories: {', '.join(sample_categories)}")
+        orchestrator.run(category_names=sample_categories)
+    elif args.categories:
+        orchestrator.run(category_names=args.categories)
+    else:
+        # Use categories from config
+        orchestrator.run()
 
 
 if __name__ == "__main__":
