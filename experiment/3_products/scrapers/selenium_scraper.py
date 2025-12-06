@@ -13,7 +13,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, WebDriverException
+from selenium.common.exceptions import TimeoutException, WebDriverException, NoSuchElementException
 
 from .amazon_scraper import AmazonScraper
 
@@ -46,11 +46,15 @@ class SeleniumAmazonScraper(AmazonScraper):
             # Window size
             chrome_options.add_argument('--window-size=1920,1080')
             
-            # Disable images for faster loading (optional)
-            # chrome_options.add_argument('--blink-settings=imagesEnabled=false')
+            # Disable images for faster loading
+            prefs = {
+                'profile.managed_default_content_settings.images': 2,
+                'disk-cache-size': 4096
+            }
+            chrome_options.add_experimental_option('prefs', prefs)
             
-            # Headless mode (optional - comment out for debugging)
-            chrome_options.add_argument('--headless=new')
+            # Headless mode disabled - show browser for manual CAPTCHA solving
+            # chrome_options.add_argument('--headless=new')
             
             # Disable GPU
             chrome_options.add_argument('--disable-gpu')
@@ -62,9 +66,9 @@ class SeleniumAmazonScraper(AmazonScraper):
             # Initialize driver
             self.driver = webdriver.Chrome(options=chrome_options)
             
-            # Set timeouts
-            self.driver.implicitly_wait(10)
-            self.driver.set_page_load_timeout(30)
+            # Set timeouts (shorter for faster scraping)
+            self.driver.implicitly_wait(5)
+            self.driver.set_page_load_timeout(20)
             
             # Hide webdriver property
             self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
@@ -97,24 +101,94 @@ class SeleniumAmazonScraper(AmazonScraper):
             # Navigate to page
             self.driver.get(url)
             
-            # Random delay to simulate human behavior
-            time.sleep(random.uniform(2, 4))
+            # Use configured delay from rate_limiting settings (already applied in navigation)
             
-            # Wait for page to load (check for common Amazon elements)
+            # Wait for page to load (shorter timeout for speed)
             try:
-                WebDriverWait(self.driver, 10).until(
+                WebDriverWait(self.driver, 5).until(
                     lambda d: d.execute_script('return document.readyState') == 'complete'
                 )
             except TimeoutException:
-                logging.warning("Page load timeout, continuing anyway...")
+                logging.debug("Page load timeout, continuing anyway...")
+            
+            # Simulate human behavior: random scrolling
+            try:
+                # Scroll down a bit (random amount)
+                scroll_amount = random.randint(300, 800)
+                self.driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                time.sleep(random.uniform(0.5, 1.5))
+                
+                # Scroll back up a little
+                scroll_back = random.randint(100, 300)
+                self.driver.execute_script(f"window.scrollBy(0, -{scroll_back});")
+                time.sleep(random.uniform(0.3, 0.8))
+            except Exception as e:
+                logging.debug(f"Scroll simulation failed: {e}")
             
             # Get page source
             html = self.driver.page_source
             
+            # Check for "Continue Shopping" button or CAPTCHA
+            if 'continue shopping' in html.lower():
+                logging.info("🔘 'Continue Shopping' button detected - clicking it...")
+                try:
+                    # Try multiple selectors for the Continue Shopping button
+                    button_selectors = [
+                        "//input[@type='submit' and contains(@aria-labelledby, 'continue')]",
+                        "//input[@type='submit' and @name='continue-shopping']",
+                        "//span[contains(text(), 'Continue shopping')]",
+                        "//button[contains(text(), 'Continue shopping')]",
+                        "//a[contains(text(), 'Continue shopping')]"
+                    ]
+                    
+                    button_clicked = False
+                    for selector in button_selectors:
+                        try:
+                            button = self.driver.find_element(By.XPATH, selector)
+                            button.click()
+                            logging.info("✅ Clicked 'Continue Shopping' button")
+                            time.sleep(2)  # Wait for page to load
+                            html = self.driver.page_source
+                            button_clicked = True
+                            break
+                        except:
+                            continue
+                    
+                    if not button_clicked:
+                        logging.warning("⚠️  Could not find 'Continue Shopping' button, continuing anyway...")
+                except Exception as e:
+                    logging.warning(f"Error clicking button: {e}")
+            
             # Check for CAPTCHA
             if 'captcha' in html.lower() or 'robot check' in html.lower():
-                logging.warning("CAPTCHA detected!")
-                return None
+                logging.warning("⚠️  CAPTCHA DETECTED! Please solve it manually in the browser window...")
+                logging.warning("⏳ Waiting for you to solve CAPTCHA... (checking every 5 seconds)")
+                
+                # Wait for user to solve CAPTCHA
+                captcha_solved = False
+                wait_time = 0
+                max_wait = 300  # Wait up to 5 minutes
+                
+                while not captcha_solved and wait_time < max_wait:
+                    time.sleep(5)
+                    wait_time += 5
+                    
+                    # Check if CAPTCHA is still there
+                    try:
+                        current_html = self.driver.page_source
+                        if 'captcha' not in current_html.lower() and 'robot check' not in current_html.lower():
+                            captcha_solved = True
+                            logging.info("✅ CAPTCHA solved! Continuing...")
+                            html = current_html  # Update HTML with the solved page
+                        else:
+                            logging.debug(f"Still waiting... ({wait_time}s elapsed)")
+                    except Exception as e:
+                        logging.error(f"Error checking CAPTCHA status: {e}")
+                        break
+                
+                if not captcha_solved:
+                    logging.error("❌ CAPTCHA not solved within 5 minutes. Skipping this page.")
+                    return None
             
             return html
             
@@ -141,7 +215,7 @@ class SeleniumAmazonScraper(AmazonScraper):
     
     def search_products(self, category_name: str, max_products: int = 10):
         """
-        Override search_products to use Selenium
+        Override search_products to use Selenium with human-like delays
         """
         from urllib.parse import quote_plus
         from lxml import html as lhtml
@@ -155,7 +229,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             logging.info(f"Search URL: {search_url}")
             
-            # Fetch search page
+            # Fetch search page (no delays - real-time scraping)
             html_content = self._fetch_page(search_url)
             
             if not html_content:
@@ -214,7 +288,7 @@ class SeleniumAmazonScraper(AmazonScraper):
     
     def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Override scrape_product_details to use Selenium
+        Override scrape_product_details to use Selenium with human-like delays
         """
         from lxml import html as lhtml
         
@@ -234,6 +308,10 @@ class SeleniumAmazonScraper(AmazonScraper):
         }
         
         try:
+            # No delay - show scraping process in real-time
+            # (only using the configured rate_limiting delay which happens in _fetch_page)
+            pass
+            
             # Fetch page using Selenium
             html_content = self._fetch_page(real_url)
             
