@@ -2388,5 +2388,101 @@
         "confidence": 0.2
       }
     ]
+  },
+  "Aprons": {
+    "category": "Aprons",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Package Dimensions",
+          "Item Weight",
+          "Department",
+          "Manufacturer",
+          "ASIN"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      }
+    ]
+  },
+  "Sink Organizers": {
+    "category": "Sink Organizers",
+    "patterns_found": true,
+    "total_products_analyzed": 5,
+    "rules": [
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_detailBullets_sections1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Material",
+          "Product Dimensions",
+          "Brand",
+          "Recommended Uses For Product",
+          "Mounting Type"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "table",
+        "priority": 2,
+        "xpath": "//table[@class='a-normal a-spacing-micro']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Material",
+          "Product Dimensions",
+          "Brand",
+          "Recommended Uses For Product",
+          "Mounting Type"
+        ],
+        "frequency": 5,
+        "confidence": 1.0
+      },
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "This item"
+        ],
+        "frequency": 2,
+        "confidence": 0.4
+      },
+      {
+        "type": "table",
+        "priority": 1,
+        "xpath": "//table[@id='productDetails_techSpec_section_1']",
+        "extraction_method": "table_key_value",
+        "sample_keys": [
+          "Specific Uses For Product",
+          "Material",
+          "Special Feature",
+          "Brand",
+          "Finish Type"
+        ],
+        "frequency": 1,
+        "confidence": 0.2
+      }
+    ]
   }
 }
