@@ -50,7 +50,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             # Enable all media and scripts for realistic browsing
             prefs = {
-                # 'profile.managed_default_content_settings.images': 1,  # Enable images
+                'profile.managed_default_content_settings.images': 1,  # Enable images
                 'profile.managed_default_content_settings.javascript': 1,  # Enable JavaScript
                 # 'profile.managed_default_content_settings.plugins': 1,  # Enable plugins
                 # 'profile.managed_default_content_settings.media_stream': 1,  # Enable media
@@ -121,7 +121,7 @@ class SeleniumAmazonScraper(AmazonScraper):
                 # Scroll down a bit (random amount)
                 scroll_amount = random.randint(300, 800)
                 self.driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
-                time.sleep(random.uniform(0.5, 1.5))
+                time.sleep(random.uniform(3.0, 5.0))
                 
                 # Scroll back up a little
                 scroll_back = random.randint(100, 300)
