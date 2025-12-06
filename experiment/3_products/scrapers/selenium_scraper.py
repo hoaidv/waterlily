@@ -11,6 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException, NoSuchElementException
@@ -28,6 +29,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         super().__init__(config, output_dir)
         
         self.driver = None
+        self.current_search_url = None  # Track current search page
         self._setup_driver()
     
     def _setup_driver(self):
@@ -46,9 +48,12 @@ class SeleniumAmazonScraper(AmazonScraper):
             # Window size
             chrome_options.add_argument('--window-size=1920,1080')
             
-            # Disable images for faster loading
+            # Enable all media and scripts for realistic browsing
             prefs = {
-                'profile.managed_default_content_settings.images': 2,
+                # 'profile.managed_default_content_settings.images': 1,  # Enable images
+                'profile.managed_default_content_settings.javascript': 1,  # Enable JavaScript
+                # 'profile.managed_default_content_settings.plugins': 1,  # Enable plugins
+                # 'profile.managed_default_content_settings.media_stream': 1,  # Enable media
                 'disk-cache-size': 4096
             }
             chrome_options.add_experimental_option('prefs', prefs)
@@ -56,8 +61,8 @@ class SeleniumAmazonScraper(AmazonScraper):
             # Headless mode disabled - show browser for manual CAPTCHA solving
             # chrome_options.add_argument('--headless=new')
             
-            # Disable GPU
-            chrome_options.add_argument('--disable-gpu')
+            # Enable GPU for better rendering
+            # chrome_options.add_argument('--disable-gpu')
             
             # No sandbox
             chrome_options.add_argument('--no-sandbox')
@@ -111,7 +116,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             except TimeoutException:
                 logging.debug("Page load timeout, continuing anyway...")
             
-            # Simulate human behavior: random scrolling
+            # Simulate human behavior: incremental scrolling over ~5 seconds
             try:
                 # Scroll down a bit (random amount)
                 scroll_amount = random.randint(300, 800)
@@ -128,31 +133,53 @@ class SeleniumAmazonScraper(AmazonScraper):
             # Get page source
             html = self.driver.page_source
             
+            # Check for "Dogs of Amazon" page - Navigate home to avoid
+            if 'dogs of amazon' in html.lower():
+                logging.warning("🐕 'Dogs of Amazon' page detected!")
+                logging.info("🔗 Navigating home after 🐕")
+                
+                try:
+                    # Navigate to the continue shopping page
+                    self.driver.get("https://www.amazon.com/ref=cs_503_link")
+                    time.sleep(random.uniform(0, 2))
+                    logging.info("✅ Navigated home after 🐕")
+                    
+                    # Wait a bit more before retry
+                    time.sleep(random.uniform(0, 2))
+                    
+                    # Retry the original URL
+                    logging.info("⏳ Retrying original request...")
+                    self.driver.get(url)
+                    time.sleep(random.uniform(*self.delay_range))
+                    
+                    # Re-scroll
+                    try:
+                        self._human_like_scroll()
+                    except:
+                        pass
+                    
+                    html = self.driver.page_source
+                    logging.info("✅ Successfully recovered from Dogs of Amazon")
+                    
+                except Exception as e:
+                    logging.error(f"Error recovering from Dogs of Amazon: {e}")
+                    return None
+            
             # Check for "Continue Shopping" button or CAPTCHA
             if 'continue shopping' in html.lower():
                 logging.info("🔘 'Continue Shopping' button detected - clicking it...")
                 try:
-                    # Try multiple selectors for the Continue Shopping button
-                    button_selectors = [
-                        "//input[@type='submit' and contains(@aria-labelledby, 'continue')]",
-                        "//input[@type='submit' and @name='continue-shopping']",
-                        "//span[contains(text(), 'Continue shopping')]",
-                        "//button[contains(text(), 'Continue shopping')]",
-                        "//a[contains(text(), 'Continue shopping')]"
-                    ]
-                    
+                    time.sleep(1)  # Wait for page to load
+
                     button_clicked = False
-                    for selector in button_selectors:
-                        try:
-                            button = self.driver.find_element(By.XPATH, selector)
-                            button.click()
-                            logging.info("✅ Clicked 'Continue Shopping' button")
-                            time.sleep(2)  # Wait for page to load
-                            html = self.driver.page_source
-                            button_clicked = True
-                            break
-                        except:
-                            continue
+                    try:
+                        button = self.driver.find_element(By.XPATH, "//*[contains(text(), 'Continue shopping')]")
+                        button.click()
+                        logging.info("✅ Clicked 'Continue Shopping' button")
+                        html = self.driver.page_source
+                        button_clicked = True
+                    except:
+                        logging.warning("⚠️  Could not click 'Continue Shopping' button, continuing anyway...")
                     
                     if not button_clicked:
                         logging.warning("⚠️  Could not find 'Continue Shopping' button, continuing anyway...")
@@ -215,7 +242,7 @@ class SeleniumAmazonScraper(AmazonScraper):
     
     def search_products(self, category_name: str, max_products: int = 10):
         """
-        Override search_products to use Selenium with human-like delays
+        Override search_products to use Selenium with realistic search bar interaction
         """
         from urllib.parse import quote_plus
         from lxml import html as lhtml
@@ -223,14 +250,49 @@ class SeleniumAmazonScraper(AmazonScraper):
         products = []
         
         try:
-            # Construct search URL
-            search_query = quote_plus(category_name)
-            search_url = f"{self.base_url}/s?k={search_query}"
+            # Navigate to Amazon homepage if not already there
+            logging.info("🏠 Navigating to Amazon homepage...")
+            self.driver.get(self.base_url)
+            time.sleep(random.uniform(2, 3))
             
-            logging.info(f"Search URL: {search_url}")
+            # Find and interact with search bar
+            logging.info(f"🔍 Searching for: {category_name}")
             
-            # Fetch search page (no delays - real-time scraping)
-            html_content = self._fetch_page(search_url)
+            try:
+                # Find search input
+                search_input = self.driver.find_element(By.CSS_SELECTOR, "input#twotabsearchtextbox")
+                
+                # Clear any existing text
+                search_input.clear()
+                time.sleep(random.uniform(0.3, 0.6))
+                
+                # Type search term character by character (human-like)
+                for char in category_name:
+                    search_input.send_keys(char)
+                    time.sleep(random.uniform(0.05, 0.15))  # Small delay between keystrokes
+                
+                logging.info("⌨️  Typed search term")
+                time.sleep(random.uniform(0.5, 1.0))
+                
+                # Submit search (press Enter)
+                search_input.send_keys(Keys.RETURN)
+                logging.info("✅ Submitted search")
+                
+                # Wait for search results to load
+                time.sleep(random.uniform(2, 4))
+                
+                # Get page source
+                html_content = self.driver.page_source
+                
+                # Store the current URL as search URL
+                search_url = self.driver.current_url
+                
+            except NoSuchElementException:
+                logging.warning("⚠️  Search bar not found, falling back to direct URL navigation")
+                # Fallback: use direct URL
+                search_query = quote_plus(category_name)
+                search_url = f"{self.base_url}/s?k={search_query}"
+                html_content = self._fetch_page(search_url)
             
             if not html_content:
                 logging.error("Failed to fetch search page")
@@ -281,6 +343,9 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             logging.info(f"Found {len(products)} unique products for {category_name}")
             
+            # Store the search URL for later navigation
+            self.current_search_url = search_url
+            
         except Exception as e:
             logging.error(f"Error searching for {category_name}: {e}")
         
@@ -288,7 +353,7 @@ class SeleniumAmazonScraper(AmazonScraper):
     
     def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Override scrape_product_details to use Selenium with human-like delays
+        Override scrape_product_details to simulate clicking links from search page
         """
         from lxml import html as lhtml
         
@@ -308,11 +373,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         }
         
         try:
-            # No delay - show scraping process in real-time
-            # (only using the configured rate_limiting delay which happens in _fetch_page)
-            pass
-            
-            # Fetch page using Selenium
+            # Simplified strategy: Direct navigation with human-like delays
             html_content = self._fetch_page(real_url)
             
             if not html_content:
