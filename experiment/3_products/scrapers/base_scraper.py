@@ -26,6 +26,7 @@ class BaseScraper(ABC):
         self.config = config
         self.output_dir = output_dir
         self.config_dir = os.path.join(os.path.dirname(output_dir), "config")
+        self.analyze_dir = os.path.join(os.path.dirname(output_dir), "analyze")
         
         # Create output directories if they don't exist
         os.makedirs(self.output_dir, exist_ok=True)
@@ -111,7 +112,7 @@ class BaseScraper(ABC):
         safe_name = self._sanitize_filename(category_name)
         website = self.get_website_name()
         filename = f"{website}_{safe_name}_analyze{suffix}.txt"
-        analyze_file = os.path.join(self.config_dir, filename)
+        analyze_file = os.path.join(self.analyze_dir, filename)
         
         with open(analyze_file, 'w', encoding='utf-8') as f:
             f.write(content)
