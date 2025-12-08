@@ -20,6 +20,7 @@ Who use it: Sellers
 - description: text
 - status: ACTIVE, INACTIVE
 - source: 128
+- source_url: 1024
 - created_at: timestamp
 - category_id -> categories(id)
 - product_def_id -> product_defs(id)
@@ -88,6 +89,7 @@ Role: Actual product variants (combinations of attribute values)
 - variant_sku: C-2025-TSHIRT-BEIGE-XL, C-2025-TSHIRT-BEIGE-XXL, C-2025-TSHIRT-RED-M...
 - quantity
 - price
+- currency: 8
 - attributes: json
   + e.g. { color: Beige, size: XL }, { color: Red, size: M }
 
