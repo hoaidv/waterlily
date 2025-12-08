@@ -37,7 +37,9 @@ CREATE TABLE products (
     id BIGINT PRIMARY KEY,
     base_sku VARCHAR(128) NOT NULL UNIQUE,
     name VARCHAR(512) NOT NULL,
+    description TEXT,
     status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+    source VARCHAR(128) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     category_id INT,
@@ -47,6 +49,7 @@ CREATE TABLE products (
     FOREIGN KEY (product_def_id) REFERENCES product_defs(id) ON DELETE SET NULL,
     INDEX idx_base_sku (base_sku),
     INDEX idx_status (status),
+    INDEX idx_source (source),
     INDEX idx_category_id (category_id),
     INDEX idx_product_def_id (product_def_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

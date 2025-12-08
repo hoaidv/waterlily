@@ -323,6 +323,10 @@ class SeleniumAmazonScraper(AmazonScraper):
                 if not href or href == '#' or href.startswith('javascript:'):
                     continue
                 
+                # Skip author pages (URLs like /e/B0G3WYM4ZQ or /author/...)
+                if '/e/' in href or '/author/' in href or '/-/e/' in href:
+                    continue
+                
                 # Make absolute URL
                 if href.startswith('/'):
                     full_url = f"{self.base_url}{href}"
@@ -331,6 +335,10 @@ class SeleniumAmazonScraper(AmazonScraper):
                 
                 # Extract real URL from redirects
                 real_url = self._extract_real_url(full_url)
+                
+                # Double-check after extraction (in case redirect resolved to author page)
+                if '/e/' in real_url or '/author/' in real_url or '/-/e/' in real_url:
+                    continue
                 
                 # Deduplicate
                 if real_url not in seen:

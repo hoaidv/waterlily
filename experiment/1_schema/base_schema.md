@@ -17,7 +17,9 @@ Who use it: Sellers
 - id: BIGINT, This is generated randomly by application, not incremental
 - base_sku: "C-2025-TSHIRT", this is user-defined
 - name: 512
+- description: text
 - status: ACTIVE, INACTIVE
+- source: 128
 - created_at: timestamp
 - category_id -> categories(id)
 - product_def_id -> product_defs(id)

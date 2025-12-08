@@ -73,6 +73,10 @@ class PatternLearner:
         detail_bullet_lists = self._find_detail_bullet_lists(tree)
         analysis['structured_data'].extend(detail_bullet_lists)
         
+        # Find book-specific attributes (ol/li with rpi-attribute classes)
+        book_attributes = self._find_book_attributes(tree)
+        analysis['structured_data'].extend(book_attributes)
+        
         # Generate extraction rules from found patterns
         analysis['extraction_rules'] = self._generate_extraction_rules(analysis)
         
@@ -321,6 +325,93 @@ class PatternLearner:
         
         return bullet_lists
     
+    def _find_book_attributes(self, tree) -> List[Dict[str, Any]]:
+        """
+        Find book-specific attributes in ol/li structure with rpi-attribute classes
+        
+        Structure:
+        <ol>
+          <li>
+            <div class="rpi-attribute-label">Print length</div>
+            <div class="rpi-attribute-value">352 pages</div>
+          </li>
+        </ol>
+        
+        Also extracts author from span.author
+        
+        Args:
+            tree: lxml tree
+            
+        Returns:
+            List of book attribute patterns
+        """
+        book_patterns = []
+        
+        # Find ol elements containing rpi-attribute-label/value pairs
+        ol_elements = tree.xpath('//ol[.//div[contains(@class, "rpi-attribute-label")]]')
+        
+        for idx, ol in enumerate(ol_elements):
+            kv_pairs = []
+            
+            # Find all li elements
+            lis = ol.xpath('.//li')
+            
+            for li in lis:
+                # Look for label and value divs
+                label_divs = li.xpath('.//div[contains(@class, "rpi-attribute-label")]')
+                value_divs = li.xpath('.//div[contains(@class, "rpi-attribute-value")]')
+                
+                if label_divs and value_divs:
+                    key = self._extract_text(label_divs[0]).strip()
+                    value = self._extract_text(value_divs[0]).strip()
+                    
+                    if key and value and self._is_valid_attribute_name(key):
+                        kv_pairs.append({
+                            'key': key,
+                            'value': value
+                        })
+            
+            if kv_pairs:
+                ol_id = ol.get('id')
+                ol_class = ol.get('class')
+                
+                # Generate XPath
+                if ol_id:
+                    xpath = f"//ol[@id='{ol_id}']//li"
+                else:
+                    xpath = "//ol[.//div[contains(@class, 'rpi-attribute-label')]]//li"
+                
+                book_patterns.append({
+                    'type': 'book_attributes',
+                    'xpath': xpath,
+                    'id': ol_id,
+                    'class': ol_class,
+                    'key_value_pairs': kv_pairs
+                })
+        
+        # Also try to extract author from span.author > a[href contains '/e/']
+        # The author link has href pattern like "/Author-Name/e/B0DPD49B56/..."
+        author_links = tree.xpath('//span[contains(@class, "author")]//a[contains(@href, "/e/")]')
+        
+        if author_links:
+            # Extract author name from the author link (not "Follow" or other links)
+            author_name = self._extract_text(author_links[0]).strip()
+            
+            if author_name:
+                # Add author as a special pattern
+                book_patterns.append({
+                    'type': 'book_author',
+                    'xpath': '//span[contains(@class, "author")]//a[contains(@href, "/e/")]',
+                    'id': None,
+                    'class': 'author',
+                    'key_value_pairs': [{
+                        'key': 'Author',
+                        'value': author_name
+                    }]
+                })
+        
+        return book_patterns
+    
     def _extract_key_values_from_div(self, div_elem) -> List[Dict[str, str]]:
         """
         Extract key-value pairs from a div element
@@ -507,7 +598,7 @@ class PatternLearner:
             if len(valid_keys) >= len(sample_keys) * 0.8:  # At least 80% valid for divs
                 rule = {
                     'type': struct['type'],
-                    'priority': 1 if struct['id'] else (2 if struct['class'] else 3),
+                    'priority': 1 if struct.get('id') else (2 if struct.get('class') else 3),
                     'xpath': struct['xpath'],
                     'extraction_method': 'key_value_pairs',
                     'sample_keys': valid_keys[:5]
@@ -600,10 +691,10 @@ class PatternLearner:
                 if not elements:
                     continue
                 
-                # For product_facts_list and detail_bullet_list, process ALL matching elements
+                # For product_facts_list, detail_bullet_list, and book_attributes, process ALL matching elements
                 # For others, take just the first match
                 rule_type = rule.get('type')
-                elements_to_process = elements if rule_type in ['product_facts_list', 'detail_bullet_list'] else [elements[0]]
+                elements_to_process = elements if rule_type in ['product_facts_list', 'detail_bullet_list', 'book_attributes'] else [elements[0]]
                 
                 for elem in elements_to_process:
                     if extraction_method == 'table_key_value':
@@ -660,6 +751,28 @@ class PatternLearner:
                                     if key and value and self._is_valid_attribute_name(key):
                                         normalized_key = self._normalize_attribute_name(key)
                                         attributes[normalized_key] = value
+                        
+                        elif rule_type == 'book_attributes':
+                            # Extract from book-specific ol/li with rpi-attribute-label/value
+                            # elem is an li element
+                            label_divs = elem.xpath('.//div[contains(@class, "rpi-attribute-label")]')
+                            value_divs = elem.xpath('.//div[contains(@class, "rpi-attribute-value")]')
+                            
+                            if label_divs and value_divs:
+                                key = self._extract_text(label_divs[0]).strip()
+                                value = self._extract_text(value_divs[0]).strip()
+                                
+                                if key and value and self._is_valid_attribute_name(key):
+                                    normalized_key = self._normalize_attribute_name(key)
+                                    attributes[normalized_key] = value
+                        
+                        elif rule_type == 'book_author':
+                            # Extract author from span.author > a
+                            # elem is the <a> element within span.author (based on xpath)
+                            author_name = self._extract_text(elem).strip()
+                            
+                            if author_name:
+                                attributes['author'] = author_name
                         
                         else:
                             # Generic div extraction
