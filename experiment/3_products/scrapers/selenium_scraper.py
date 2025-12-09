@@ -6,7 +6,9 @@ Selenium-based Amazon scraper to avoid bot detection
 import time
 import logging
 import random
-from typing import Dict, Any, Optional
+import json
+import os
+from typing import Dict, Any, Optional, List
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -50,11 +52,11 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             # Enable all media and scripts for realistic browsing
             prefs = {
-                'profile.managed_default_content_settings.images': 1,  # Enable images
+                'profile.managed_default_content_settings.images': 2,  # Disable images (2 = block, 1 = allow)
                 'profile.managed_default_content_settings.javascript': 1,  # Enable JavaScript
                 # 'profile.managed_default_content_settings.plugins': 1,  # Enable plugins
                 # 'profile.managed_default_content_settings.media_stream': 1,  # Enable media
-                'disk-cache-size': 4096
+                'disk-cache-size': 8192
             }
             chrome_options.add_experimental_option('prefs', prefs)
             
@@ -73,7 +75,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             # Set timeouts (shorter for faster scraping)
             self.driver.implicitly_wait(5)
-            self.driver.set_page_load_timeout(20)
+            self.driver.set_page_load_timeout(30)
             
             # Hide webdriver property
             self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
@@ -121,12 +123,7 @@ class SeleniumAmazonScraper(AmazonScraper):
                 # Scroll down a bit (random amount)
                 scroll_amount = random.randint(300, 800)
                 self.driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
-                time.sleep(random.uniform(3.0, 5.0))
-                
-                # Scroll back up a little
-                scroll_back = random.randint(100, 300)
-                self.driver.execute_script(f"window.scrollBy(0, -{scroll_back});")
-                time.sleep(random.uniform(0.3, 0.8))
+                time.sleep(random.uniform(2.0, 3.0))
             except Exception as e:
                 logging.debug(f"Scroll simulation failed: {e}")
             
@@ -449,4 +446,282 @@ class SeleniumAmazonScraper(AmazonScraper):
         if self.driver:
             self.driver.quit()
             self.driver = None
+    
+    def scan_asins(self, category: Dict[str, Any], max_pages: int = 20) -> List[str]:
+        """
+        Scan for ASINs from Amazon product listing pages
+        
+        Args:
+            category: Category data from database
+            max_pages: Maximum number of pages to scan (default: 20)
+            
+        Returns:
+            List of ASIN strings
+        """
+        category_name = category['name']
+        logging.info(f"Scanning ASINs for category: {category_name}")
+        
+        all_asins = []
+        
+        try:
+            # Navigate to search page
+            logging.info(f"🔍 Searching for: {category_name}")
+            self.driver.get(self.base_url)
+            time.sleep(random.uniform(1, 2))
+            
+            # Find and interact with search bar
+            try:
+                search_input = self.driver.find_element(By.CSS_SELECTOR, "input#twotabsearchtextbox")
+                search_input.clear()
+                time.sleep(random.uniform(0.1, 0.2))
+                
+                # Type search term character by character
+                for char in category_name:
+                    search_input.send_keys(char)
+                    time.sleep(random.uniform(0.05, 0.15))
+                
+                time.sleep(random.uniform(0.5, 1.0))
+                search_input.send_keys(Keys.RETURN)
+                logging.info("✅ Submitted search")
+                
+                # Wait for search results to load
+                time.sleep(random.uniform(2, 4))
+                
+            except NoSuchElementException:
+                logging.warning("⚠️  Search bar not found, using direct URL")
+                from urllib.parse import quote_plus
+                search_query = quote_plus(category_name)
+                search_url = f"{self.base_url}/s?k={search_query}"
+                self.driver.get(search_url)
+                time.sleep(random.uniform(2, 4))
+            
+            # Scan pages
+            for page_num in range(1, max_pages + 1):
+                logging.info(f"📄 Scanning page {page_num}...")
+                
+                # Step 1: Scroll to bottom to fully load all products
+                logging.debug("  Scrolling to bottom to load all products...")
+                self._scroll_to_bottom()
+                
+                # Step 2: Extract ASINs from current page
+                page_asins = self._extract_asins_from_page()
+                
+                if page_asins:
+                    all_asins.extend(page_asins)
+                    logging.info(f"  Found {len(page_asins)} ASINs on page {page_num} (total: {len(all_asins)})")
+                else:
+                    logging.warning(f"  No ASINs found on page {page_num}")
+                
+                # Step 3: Try to go to next page (if not on last page)
+                if page_num < max_pages:
+                    if not self._go_to_next_page():
+                        logging.info(f"  No more pages available. Stopping at page {page_num}")
+                        break
+                    
+                    # Wait for next page to load
+                    time.sleep(random.uniform(2, 4))
+            
+            logging.info(f"✓ Completed scanning. Total ASINs found: {len(all_asins)}")
+            
+        except Exception as e:
+            logging.error(f"Error scanning ASINs for {category_name}: {e}")
+            self.stats['errors'] += 1
+        
+        return all_asins
+    
+    def _scroll_to_bottom(self):
+        """
+        Scroll to the bottom of the page to ensure all products are loaded
+        Waits for pagination elements to be visible before scrolling
+        """
+        try:
+            time.sleep(random.uniform(1, 2))  # Wait for any final lazy-loaded content
+            
+            # Trigger the load of pagination buttons
+            self.driver.execute_script("window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });")
+            
+            # Wait for pagination buttons to be present (indicates page is fully loaded)
+            logging.debug("  Waiting for pagination buttons...")
+            try:
+                WebDriverWait(self.driver, 30).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "a.s-pagination-item"))
+                )
+                logging.debug("  ✓ Pagination buttons found")
+            except TimeoutException:
+                logging.warning("  ⚠️  Pagination buttons not found within 30s timeout, continuing anyway...")
+            
+            # Scroll to absolute bottom
+            self.driver.execute_script("window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });")
+            
+        except Exception as e:
+            logging.debug(f"Error scrolling to bottom: {e}")
+            pass
+    
+    def _extract_asins_from_page(self) -> List[str]:
+        """
+        Extract ASINs from the current page using data-asin attribute
+        Note: Should be called after scrolling to bottom to ensure all products are loaded
+        
+        Returns:
+            List of ASIN strings
+        """
+        asins = []
+        
+        try:
+            # Find all elements with data-asin attribute
+            # Pattern: <div role="listitem" data-asin="B0FGY2WQ9Z" data-component-type="s-search-result">
+            elements = self.driver.find_elements(
+                By.XPATH,
+                '//div[@data-component-type="s-search-result"][@data-asin]'
+            )
+            
+            for element in elements:
+                asin = element.get_attribute('data-asin')
+                if asin and asin not in asins:
+                    asins.append(asin)
+            
+            # Alternative: try finding within the search results container
+            if not asins:
+                container = self.driver.find_elements(
+                    By.XPATH,
+                    '//span[@data-component-type="s-search-results"]//div[@data-asin]'
+                )
+                for element in container:
+                    asin = element.get_attribute('data-asin')
+                    if asin and asin not in asins:
+                        asins.append(asin)
+            
+        except Exception as e:
+            logging.debug(f"Error extracting ASINs: {e}")
+        
+        return asins
+    
+    def _go_to_next_page(self) -> bool:
+        """
+        Navigate to the next page by clicking pagination button
+        Note: Should be called after scanning ASINs (pagination should already be visible)
+        
+        Returns:
+            True if successfully navigated to next page, False otherwise
+        """
+        try:
+            # Find the next page button
+            # Pattern: <a href="..." role="button" tabindex="0" aria-label="Go to page 2" class="s-pagination-item s-pagination-button s-pagination-button-accessibility">2</a>
+            
+            # Find the button that represents the next page number
+            current_page = self._get_current_page_number()
+            
+            if current_page:
+                next_page_num = current_page + 1
+                # Look for button with text matching next page number
+                next_button = self.driver.find_elements(
+                    By.XPATH,
+                    f'//a[@role="button"][contains(@class, "s-pagination-button")][contains(@aria-label, "Go to page {next_page_num}")]'
+                )
+                
+                if not next_button:
+                    # Try alternative: find button with text matching page number
+                    next_button = self.driver.find_elements(
+                        By.XPATH,
+                        f'//a[@role="button"][contains(@class, "s-pagination-button")][text()="{next_page_num}"]'
+                    )
+                
+                if next_button:
+                    # Scroll to button to ensure it's visible
+                    self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", next_button[0])
+                    time.sleep(random.uniform(0.5, 1.0))
+                    
+                    # Click the button
+                    next_button[0].click()
+                    logging.info(f"  → Clicked pagination button for page {next_page_num}")
+                    return True
+            
+            # Fallback: try to find "Next" button
+            next_buttons = self.driver.find_elements(
+                By.XPATH,
+                '//a[@aria-label="Go to next page"]'
+            )
+            
+            if next_buttons:
+                self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", next_buttons[0])
+                time.sleep(random.uniform(0.5, 1.0))
+                next_buttons[0].click()
+                logging.info("  → Clicked 'Next' pagination button")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logging.debug(f"Error navigating to next page: {e}")
+            return False
+    
+    def _get_current_page_number(self) -> Optional[int]:
+        """Get the current page number from URL or pagination"""
+        try:
+            # Try to get from URL
+            current_url = self.driver.current_url
+            if 'page=' in current_url:
+                from urllib.parse import urlparse, parse_qs
+                parsed = urlparse(current_url)
+                query_params = parse_qs(parsed.query)
+                if 'page' in query_params:
+                    return int(query_params['page'][0])
+            
+            # Try to get from pagination (find selected/current page)
+            current_page_elem = self.driver.find_elements(
+                By.XPATH,
+                '//span[@aria-current="page"][contains(@class, "s-pagination-item")]'
+            )
+            if current_page_elem:
+                page_text = current_page_elem[0].text.strip()
+                if page_text.isdigit():
+                    return int(page_text)
+            
+            # Default to page 1 if not found
+            return 1
+            
+        except Exception as e:
+            logging.debug(f"Error getting current page number: {e}")
+            return 1
+    
+    def save_asins(self, category: Dict[str, Any], asins: List[str]):
+        """
+        Save ASINs to category-specific file: amazon_asin_<category_name>.json (thread-safe)
+        File contains just the list of ASINs
+        
+        Args:
+            category: Category data
+            asins: List of ASIN strings
+        """
+        category_name = category['name']
+        safe_name = self._sanitize_filename(category_name)
+        output_file = os.path.join(self.output_dir, f"amazon_asin_{safe_name}.json")
+        
+        # Thread-safe file write using retry mechanism
+        max_retries = 5
+        retry_delay = 0.1
+        
+        for attempt in range(max_retries):
+            try:
+                # Save ASINs as a simple list (atomic write using temp file)
+                temp_file = output_file + '.tmp'
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    json.dump(asins, f, indent=2, ensure_ascii=False)
+                    f.flush()
+                    os.fsync(f.fileno())  # Ensure data is written to disk
+                
+                # Atomic rename
+                os.replace(temp_file, output_file)
+                
+                logging.info(f"✓ Saved {len(asins)} ASINs for {category_name} to {output_file}")
+                return
+                
+            except (IOError, OSError) as e:
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay * (attempt + 1))
+                    continue
+                logging.error(f"Error saving ASINs for {category_name} (attempt {attempt + 1}/{max_retries}): {e}")
+        
+        # If all retries failed, log error
+        logging.error(f"Failed to save ASINs for {category_name} after {max_retries} attempts")
 
