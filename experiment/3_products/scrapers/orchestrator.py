@@ -156,48 +156,40 @@ class ScraperOrchestrator:
             self.logger.error(f"Failed to load categories from database: {e}")
             return []
     
-    def _process_product_scraping_worker(self, category: Dict[str, Any], website: str, max_products: int,
-                                          worker_id: int, total_categories: int, category_index: int, 
-                                          scraper: SeleniumAmazonScraper):
+    def _scrape_single_asin(self, asin: str, category: Dict[str, Any], scraper: SeleniumAmazonScraper, 
+                            asin_index: int, total_asins: int) -> Dict[str, Any]:
         """
-        Worker function to scrape products for a single category (for parallel processing)
+        Worker function to scrape a single ASIN
         
         Args:
-            category: Category data to process
-            website: Website name (e.g., 'amazon')
-            max_products: Maximum number of products to scrape
-            worker_id: ID of the worker thread
-            total_categories: Total number of categories
-            category_index: Index of this category in the list
-            scraper: Reusable scraper instance for this worker (reuses browser)
+            asin: ASIN to scrape
+            category: Category data
+            scraper: Scraper instance to use
+            asin_index: Index of this ASIN (for logging)
+            total_asins: Total number of ASINs (for logging)
+            
+        Returns:
+            Product data dictionary or None if failed
         """
-        category_name = category['name']
+        if not asin or not isinstance(asin, str):
+            return None
         
         try:
-            self.logger.info(f"{'='*80}")
-            self.logger.info(f"[Worker {worker_id}] [{category_index}/{total_categories}] SCRAPING PRODUCTS FOR: {category_name} ({website})")
-            self.logger.info(f"{'='*80}")
+            # Construct product URL
+            product_url = f"{scraper.base_url}/dp/{asin}"
             
-            # Scrape products (reuse the same browser)
-            result = scraper.process_category(category, max_products=max_products, asin_dir=self.asin_dir)
+            # Scrape product details
+            product_data = scraper.scrape_product_details(product_url, category)
+            product_data['asin'] = asin
+            product_data['position'] = asin_index
             
-            # Update statistics (thread-safe)
-            with self.progress_lock:
-                self.stats['categories_processed'] += 1
-                self.stats['total_products_scraped'] += result.get('products_scraped', 0)
-                self.stats['total_products_with_attributes'] += result.get('products_with_attributes', 0)
-            
-            self.logger.info(f"[Worker {worker_id}] ✓ Completed {category_name} on {website}")
-            self.logger.info(f"[Worker {worker_id}]   Products scraped: {result.get('products_scraped', 0)}")
-            self.logger.info(f"[Worker {worker_id}]   Products with attributes: {result.get('products_with_attributes', 0)}")
-            
-            return {'success': True, 'category_name': category_name, 'result': result}
+            return product_data
             
         except Exception as e:
-            self.logger.error(f"[Worker {worker_id}] Error processing {category_name} on {website}: {e}")
+            self.logger.error(f"Error scraping ASIN {asin} (position {asin_index}): {e}")
             with self.progress_lock:
                 self.stats['errors'] += 1
-            return {'success': False, 'category_name': category_name, 'error': str(e)}
+            return None
     
     def run(self, category_names: Optional[List[str]] = None, num_workers: int = 1):
         """
@@ -250,102 +242,161 @@ class ScraperOrchestrator:
             if missing:
                 self.logger.warning(f"Categories not found in database: {', '.join(missing)}")
         
-        # Process each category with each scraper
-        max_products = self.config.get('products_per_category_per_website', 10)
+        # Get output directory
+        output_dir = os.path.join(
+            os.path.dirname(__file__),
+            self.config.get('output', {}).get('directory', '../output')
+        )
+        os.makedirs(output_dir, exist_ok=True)
         
-        # Prepare tasks: (category, website) pairs
-        tasks = []
-        for category in categories:
-            for website in self.scrapers.keys():
-                tasks.append((category, website))
+        max_products = self.config.get('products_per_category_per_website', None)  # None = all products
         
-        total_tasks = len(tasks)
-        self.logger.info(f"\n📋 Total tasks: {total_tasks} (categories × websites)")
-        self.logger.info(f"🔧 Parallel workers: {num_workers}")
+        self.logger.info(f"\n📋 Total categories: {len(categories)}")
+        self.logger.info(f"🔧 Parallel workers per category: {num_workers}")
+        if max_products:
+            self.logger.info(f"📦 Max products per category: {max_products}")
         
-        # Process tasks
-        if num_workers > 1:
-            # Parallel processing with multiple browsers
-            self.logger.info(f"\n🚀 Starting parallel processing with {num_workers} workers...")
+        # Process categories sequentially (one by one)
+        for cat_idx, category in enumerate(categories, 1):
+            category_name = category['name']
+            safe_name = self._sanitize_filename(category_name)
             
-            # Create one scraper per worker (reused for all tasks in that worker)
-            output_dir = os.path.join(
-                os.path.dirname(__file__),
-                self.config.get('output', {}).get('directory', '../output')
-            )
-            scrapers = {}
-            for worker_id in range(1, num_workers + 1):
-                scrapers[worker_id] = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local', headless=True)
-                self.logger.info(f"  Created browser for worker {worker_id}")
+            self.logger.info(f"\n{'='*80}")
+            self.logger.info(f"[{cat_idx}/{len(categories)}] PROCESSING CATEGORY: {category_name}")
+            self.logger.info(f"{'='*80}")
+            
+            # Step 1: Load ASINs from file
+            asin_directory = self.asin_dir if self.asin_dir else output_dir
+            asin_file = os.path.join(asin_directory, f"amazon_asin_{safe_name}.json")
+            
+            if not os.path.exists(asin_file):
+                self.logger.warning(f"ASIN file not found: {asin_file} - skipping category")
+                continue
             
             try:
-                with ThreadPoolExecutor(max_workers=num_workers) as executor:
-                    # Submit all tasks
-                    future_to_task = {}
-                    for task_idx, (category, website) in enumerate(tasks, 1):
-                        worker_id = (task_idx % num_workers) + 1
-                        scraper = scrapers[worker_id]
-                        future = executor.submit(
-                            self._process_product_scraping_worker,
-                            category, website, max_products,
-                            worker_id, total_tasks, task_idx, scraper
-                        )
-                        future_to_task[future] = (category, website)
-                    
-                    # Process completed tasks
-                    for future in as_completed(future_to_task):
-                        category, website = future_to_task[future]
-                        try:
-                            result = future.result()
-                            if result['success']:
-                                self.logger.debug(f"Task {category['name']} ({website}) completed successfully")
-                            else:
-                                self.logger.error(f"Task {category['name']} ({website}) failed: {result.get('error', 'Unknown error')}")
-                        except Exception as e:
-                            self.logger.error(f"Exception processing task {category['name']} ({website}): {e}")
-            finally:
-                # Close all scrapers after all work is done
-                self.logger.info(f"\n🔒 Closing all browser instances...")
-                for worker_id, scraper in scrapers.items():
+                with open(asin_file, 'r', encoding='utf-8') as f:
+                    asins = json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                self.logger.error(f"Error loading ASIN file {asin_file}: {e} - skipping category")
+                continue
+            
+            if not isinstance(asins, list):
+                self.logger.error(f"Invalid ASIN file format: expected list, got {type(asins)} - skipping category")
+                continue
+            
+            if not asins:
+                self.logger.warning(f"No ASINs found in {asin_file} - skipping category")
+                continue
+            
+            # Limit ASINs if specified
+            original_count = len(asins)
+            if max_products and max_products > 0:
+                asins = asins[:max_products]
+                if len(asins) < original_count:
+                    self.logger.info(f"Limited ASINs: {original_count} -> {len(asins)}")
+            
+            self.logger.info(f"Loaded {len(asins)} ASINs for {category_name}")
+            
+            # Step 2: Process ASINs in parallel using worker pool
+            scraped_products = []
+            completed_count = 0
+            
+            if num_workers > 1:
+                # Parallel processing with multiple scrapers
+                self.logger.info(f"🚀 Processing {len(asins)} ASINs with {num_workers} parallel workers...")
+                
+                # Create one scraper per worker (reused for all ASINs in this category)
+                # Use a list for easier indexing
+                scrapers = []
+                for worker_id in range(num_workers):
+                    scrapers.append(SeleniumAmazonScraper(
+                        self.config, 
+                        output_dir=output_dir, 
+                        browser='Local', 
+                        headless=True
+                    ))
+                
+                try:
+                    with ThreadPoolExecutor(max_workers=num_workers) as executor:
+                        # Submit all ASIN scraping tasks
+                        # Each task will use a scraper based on its index (round-robin assignment)
+                        future_to_asin = {}
+                        for asin_idx, asin in enumerate(asins, 1):
+                            # Assign scraper based on ASIN index (round-robin)
+                            scraper = scrapers[(asin_idx - 1) % num_workers]
+                            future = executor.submit(
+                                self._scrape_single_asin,
+                                asin, category, scraper, asin_idx, len(asins)
+                            )
+                            future_to_asin[future] = (asin, asin_idx)
+                        
+                        # Collect results as they complete
+                        for future in as_completed(future_to_asin):
+                            asin, asin_idx = future_to_asin[future]
+                            try:
+                                product_data = future.result()
+                                if product_data:
+                                    scraped_products.append(product_data)
+                                    completed_count += 1
+                                    if completed_count % 10 == 0 or completed_count == len(asins):
+                                        self.logger.info(f"  Progress: {completed_count}/{len(asins)} ASINs completed")
+                            except Exception as e:
+                                self.logger.error(f"Exception processing ASIN {asin} (position {asin_idx}): {e}")
+                finally:
+                    # Close all scrapers for this category
+                    for worker_id, scraper in enumerate(scrapers, 1):
+                        if hasattr(scraper, 'close'):
+                            try:
+                                scraper.close()
+                            except Exception as e:
+                                self.logger.warning(f"Error closing scraper {worker_id}: {e}")
+            else:
+                # Sequential processing (single scraper)
+                self.logger.info(f"🔄 Processing {len(asins)} ASINs sequentially...")
+                scraper = SeleniumAmazonScraper(
+                    self.config, 
+                    output_dir=output_dir, 
+                    browser='Local', 
+                    headless=True
+                )
+                try:
+                    for asin_idx, asin in enumerate(asins, 1):
+                        product_data = self._scrape_single_asin(asin, category, scraper, asin_idx, len(asins))
+                        if product_data:
+                            scraped_products.append(product_data)
+                            completed_count += 1
+                            if completed_count % 10 == 0 or completed_count == len(asins):
+                                self.logger.info(f"  Progress: {completed_count}/{len(asins)} ASINs completed")
+                finally:
                     if hasattr(scraper, 'close'):
                         try:
                             scraper.close()
-                            self.logger.info(f"  ✓ Closed browser for worker {worker_id}")
-                        except Exception as e:
-                            self.logger.warning(f"  ⚠️  Error closing browser for worker {worker_id}: {e}")
-        else:
-            # Sequential processing (original behavior - create scraper once)
-            self.logger.info(f"\n🔄 Starting sequential processing...")
-            output_dir = os.path.join(
-                os.path.dirname(__file__),
-                self.config.get('output', {}).get('directory', '../output')
-            )
+                        except:
+                            pass
             
-            # Use existing scrapers from initialization, but create new ones if needed
-            for category in categories:
-                category_name = category['name']
-                self.logger.info(f"\n{'='*80}")
-                self.logger.info(f"CATEGORY: {category_name}")
-                self.logger.info(f"{'='*80}")
-                
-                for website, scraper in self.scrapers.items():
-                    self.logger.info(f"\nProcessing with {website} scraper...")
-                    
-                    try:
-                        result = scraper.process_category(category, max_products=max_products, asin_dir=self.asin_dir)
-                        
-                        # Update statistics
-                        self.stats['categories_processed'] += 1
-                        self.stats['total_products_scraped'] += result.get('products_scraped', 0)
-                        self.stats['total_products_with_attributes'] += result.get('products_with_attributes', 0)
-                        
-                        self.logger.info(f"✓ Completed {category_name} on {website}")
-                        self.logger.info(f"  Products scraped: {result.get('products_scraped', 0)}")
-                        self.logger.info(f"  Products with attributes: {result.get('products_with_attributes', 0)}")
-                    
-                    except Exception as e:
-                        self.logger.error(f"Error processing {category_name} on {website}: {e}")
-                        self.stats['errors'] += 1
+            # Step 3: Save all products for this category to category-specific file
+            products_file = os.path.join(output_dir, f"amazon_products_{safe_name}.json")
+            
+            # Remove temporary analysis data before saving
+            for product in scraped_products:
+                product.pop('_analysis', None)
+                product.pop('_html_snippet', None)
+            
+            with open(products_file, 'w', encoding='utf-8') as f:
+                json.dump(scraped_products, f, indent=2, ensure_ascii=False)
+            
+            products_with_attributes = sum(1 for p in scraped_products if p.get('attributes'))
+            
+            # Update statistics
+            self.stats['categories_processed'] += 1
+            self.stats['total_products_scraped'] += len(scraped_products)
+            self.stats['total_products_with_attributes'] += products_with_attributes
+            
+            self.logger.info(f"✓ Completed category: {category_name}")
+            self.logger.info(f"  ASINs processed: {len(asins)}")
+            self.logger.info(f"  Products scraped: {len(scraped_products)}")
+            self.logger.info(f"  Products with attributes: {products_with_attributes}")
+            self.logger.info(f"  Saved to: {products_file}")
         
         # Finalize
         self.stats['end_time'] = datetime.now()
