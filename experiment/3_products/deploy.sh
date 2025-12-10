@@ -10,7 +10,7 @@ GCP_INSTANCE="instance-20251210-131952"
 GCP_PROJECT="todaycreative-395514"
 REMOTE_USER="${USER:-$(whoami)}"
 REMOTE_DIR="~/waterlily-scraper"
-LOCAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"h
+LOCAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=========================================="
 echo "Deploying to GCP Instance"
