@@ -1,14 +1,6 @@
 {
-  "target_categories": [
-    "iPhones",
-    "Men's Clothing",
-    "Mirrorless Cameras"
-  ],
   "websites": [
-    "amazon",
-    "flipkart",
-    "newegg",
-    "craigslist"
+    "amazon"
   ],
   "products_per_category_per_website": 3,
   "sample_mode": {
@@ -19,9 +11,6 @@
     "delay_range": [0, 1],
     "max_retries": 3,
     "timeout": 15
-  },
-  "craigslist": {
-    "location": "sfbay"
   },
   "checkpoint": {
     "enabled": true,
