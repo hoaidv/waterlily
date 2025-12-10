@@ -17,6 +17,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException, NoSuchElementException
+from webdriver_manager.chrome import ChromeDriverManager
 
 from .amazon_scraper import AmazonScraper
 
@@ -26,10 +27,18 @@ class SeleniumAmazonScraper(AmazonScraper):
     Amazon scraper using Selenium to simulate real browser traffic
     """
     
-    def __init__(self, config: Dict[str, Any], output_dir: str = './output'):
-        """Initialize Selenium scraper"""
+    def __init__(self, config: Dict[str, Any], output_dir: str = './output', headless: bool = False):
+        """
+        Initialize Selenium scraper
+        
+        Args:
+            config: Configuration dictionary
+            output_dir: Directory for output files
+            headless: Whether to run browser in headless mode (default: False)
+        """
         super().__init__(config, output_dir)
         
+        self.headless = headless
         self.driver = None
         self._setup_driver()
     
@@ -59,18 +68,19 @@ class SeleniumAmazonScraper(AmazonScraper):
             }
             chrome_options.add_experimental_option('prefs', prefs)
             
-            # Headless mode disabled - show browser for manual CAPTCHA solving
-            # chrome_options.add_argument('--headless=new')
-            
-            # Enable GPU for better rendering
-            # chrome_options.add_argument('--disable-gpu')
+            # Headless mode - enable if requested (default: disabled for manual CAPTCHA solving)
+            if self.headless:
+                chrome_options.add_argument('--headless=new')
+                chrome_options.add_argument('--disable-gpu')
             
             # No sandbox
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             
-            # Initialize driver
-            self.driver = webdriver.Chrome(options=chrome_options)
+            # Initialize driver with automatic ChromeDriver management
+            # webdriver-manager will automatically download and manage the correct ChromeDriver version
+            service = Service(ChromeDriverManager().install())
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
             
             # Set timeouts (shorter for faster scraping)
             self.driver.implicitly_wait(5)
