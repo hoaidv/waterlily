@@ -118,14 +118,10 @@ class SeleniumAmazonScraper(AmazonScraper):
                 logging.debug("Page load timeout, continuing anyway...")
             
             # Simulate human behavior: incremental scrolling over ~5 seconds
-            try:
-                # Scroll down a bit (random amount)
-                scroll_amount = random.randint(300, 800)
-                self.driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
-                time.sleep(random.uniform(2.0, 3.0))
-            except Exception as e:
-                logging.debug(f"Scroll simulation failed: {e}")
-            
+            scroll_amount = random.randint(300, 800)
+            self.driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            # time.sleep(random.uniform(2.0, 3.0))
+        
             # Get page source
             html = self.driver.page_source
             
@@ -137,7 +133,6 @@ class SeleniumAmazonScraper(AmazonScraper):
                 try:
                     # Navigate to the continue shopping page
                     self.driver.get("https://www.amazon.com/ref=cs_503_link")
-                    time.sleep(random.uniform(0, 2))
                     logging.info("✅ Navigated home after 🐕")
                     
                     # Wait a bit more before retry
@@ -167,8 +162,6 @@ class SeleniumAmazonScraper(AmazonScraper):
             if 'continue shopping' in html.lower():
                 logging.info("🔘 'Continue Shopping' button detected - clicking it...")
                 try:
-                    time.sleep(1)  # Wait for page to load
-
                     button_clicked = False
                     try:
                         button = self.driver.find_element(By.XPATH, "//*[contains(text(), 'Continue shopping')]")
@@ -232,7 +225,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         
         # Extract real URL from redirects
         real_url = self._extract_real_url(product_url)
-        logging.info(f"Scraping product: {real_url}")
+        logging.info(f"Scraping {real_url}")
         
         product_data = {
             'url': real_url,
@@ -248,6 +241,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         try:
             # Simplified strategy: Direct navigation with human-like delays
             html_content = self._fetch_page(real_url)
+            logging.debug(f"Got HTML {real_url}")
             
             if not html_content:
                 product_data['error'] = "Failed to fetch page"
@@ -290,6 +284,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             product_data['error'] = str(e)
             self.stats['errors'] += 1
         
+        logging.debug(f"Analyzed HTML {real_url}")
         return product_data
     
     def scrape_products_from_asins(self, category: Dict[str, Any], max_products: Optional[int] = None, asin_dir: Optional[str] = None) -> Dict[str, Any]:

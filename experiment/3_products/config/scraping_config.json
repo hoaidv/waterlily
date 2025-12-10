@@ -16,7 +16,7 @@
     "products_per_website": 5
   },
   "rate_limiting": {
-    "delay_range": [1.5, 3.5],
+    "delay_range": [0, 1],
     "max_retries": 3,
     "timeout": 15
   },
