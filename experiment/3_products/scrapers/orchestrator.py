@@ -121,7 +121,8 @@ class ScraperOrchestrator:
             if website.lower() == 'amazon':
                 self.scrapers['amazon'] = SeleniumAmazonScraper(
                     self.config,
-                    output_dir=output_dir
+                    output_dir=output_dir,
+                    browser='Local'
                 )
                 self.logger.info(f"✓ Initialized Selenium Amazon scraper")
             # Add more scrapers here as needed
@@ -516,7 +517,7 @@ class ScraperOrchestrator:
             )
             scrapers = {}
             for worker_id in range(1, num_workers + 1):
-                scrapers[worker_id] = SeleniumAmazonScraper(self.config, output_dir=output_dir)
+                scrapers[worker_id] = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local')
                 self.logger.info(f"  Created browser for worker {worker_id}")
             
             try:
@@ -561,7 +562,7 @@ class ScraperOrchestrator:
                 os.path.dirname(__file__),
                 self.config.get('output', {}).get('directory', '../output')
             )
-            scraper = SeleniumAmazonScraper(self.config, output_dir=output_dir)
+            scraper = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local')
             try:
                 for idx, category in categories_to_process:
                     self._process_category_worker(

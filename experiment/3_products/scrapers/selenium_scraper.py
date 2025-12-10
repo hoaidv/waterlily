@@ -21,13 +21,18 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from .amazon_scraper import AmazonScraper
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class SeleniumAmazonScraper(AmazonScraper):
     """
     Amazon scraper using Selenium to simulate real browser traffic
     """
     
-    def __init__(self, config: Dict[str, Any], output_dir: str = './output', headless: bool = False):
+    def __init__(self, config: Dict[str, Any], output_dir: str = './output', browser: str = 'Install', headless: bool = False):
         """
         Initialize Selenium scraper
         
@@ -39,6 +44,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         super().__init__(config, output_dir)
         
         self.headless = headless
+        self.browser = browser
         self.driver = None
         self._setup_driver()
     
@@ -79,8 +85,11 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             # Initialize driver with automatic ChromeDriver management
             # webdriver-manager will automatically download and manage the correct ChromeDriver version
-            service = Service(ChromeDriverManager().install())
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            if self.browser == 'Install':
+                service = Service(ChromeDriverManager().install())
+                self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            else:
+                self.driver = webdriver.Chrome(options=chrome_options)
             
             # Set timeouts (shorter for faster scraping)
             self.driver.implicitly_wait(5)
@@ -95,10 +104,10 @@ class SeleniumAmazonScraper(AmazonScraper):
                 '''
             })
             
-            logging.info("✓ Selenium driver initialized")
+            logger.info("✓ Selenium driver initialized")
             
         except Exception as e:
-            logging.error(f"Failed to initialize Selenium driver: {e}")
+            logger.error(f"Failed to initialize Selenium driver: {e}")
             raise
     
     def _fetch_page(self, url: str) -> Optional[str]:
@@ -112,7 +121,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             HTML content or None
         """
         try:
-            logging.info(f"Fetching: {url}")
+            logger.info(f"Fetching: {url}")
             
             # Navigate to page
             self.driver.get(url)
@@ -125,7 +134,7 @@ class SeleniumAmazonScraper(AmazonScraper):
                     lambda d: d.execute_script('return document.readyState') == 'complete'
                 )
             except TimeoutException:
-                logging.debug("Page load timeout, continuing anyway...")
+                logger.debug("Page load timeout, continuing anyway...")
             
             # Simulate human behavior: incremental scrolling over ~5 seconds
             scroll_amount = random.randint(300, 800)
@@ -137,19 +146,19 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             # Check for "Dogs of Amazon" page - Navigate home to avoid
             if 'dogs of amazon' in html.lower():
-                logging.warning("🐕 'Dogs of Amazon' page detected!")
-                logging.info("🔗 Navigating home after 🐕")
+                logger.warning("🐕 'Dogs of Amazon' page detected!")
+                logger.info("🔗 Navigating home after 🐕")
                 
                 try:
                     # Navigate to the continue shopping page
                     self.driver.get("https://www.amazon.com/ref=cs_503_link")
-                    logging.info("✅ Navigated home after 🐕")
+                    logger.info("✅ Navigated home after 🐕")
                     
                     # Wait a bit more before retry
                     time.sleep(random.uniform(0, 2))
                     
                     # Retry the original URL
-                    logging.info("⏳ Retrying original request...")
+                    logger.info("⏳ Retrying original request...")
                     self.driver.get(url)
                     time.sleep(random.uniform(*self.delay_range))
                     
@@ -162,35 +171,35 @@ class SeleniumAmazonScraper(AmazonScraper):
                         pass
                     
                     html = self.driver.page_source
-                    logging.info("✅ Successfully recovered from Dogs of Amazon")
+                    logger.info("✅ Successfully recovered from Dogs of Amazon")
                     
                 except Exception as e:
-                    logging.error(f"Error recovering from Dogs of Amazon: {e}")
+                    logger.error(f"Error recovering from Dogs of Amazon: {e}")
                     return None
             
             # Check for "Continue Shopping" button or CAPTCHA
             if 'continue shopping' in html.lower():
-                logging.info("🔘 'Continue Shopping' button detected - clicking it...")
+                logger.info("🔘 'Continue Shopping' button detected - clicking it...")
                 try:
                     button_clicked = False
                     try:
                         button = self.driver.find_element(By.XPATH, "//*[contains(text(), 'Continue shopping')]")
                         button.click()
-                        logging.info("✅ Clicked 'Continue Shopping' button")
+                        logger.info("✅ Clicked 'Continue Shopping' button")
                         html = self.driver.page_source
                         button_clicked = True
                     except:
-                        logging.warning("⚠️  Could not click 'Continue Shopping' button, continuing anyway...")
+                        logger.warning("⚠️  Could not click 'Continue Shopping' button, continuing anyway...")
                     
                     if not button_clicked:
-                        logging.warning("⚠️  Could not find 'Continue Shopping' button, continuing anyway...")
+                        logger.warning("⚠️  Could not find 'Continue Shopping' button, continuing anyway...")
                 except Exception as e:
-                    logging.warning(f"Error clicking button: {e}")
+                    logger.warning(f"Error clicking button: {e}")
             
             # Check for CAPTCHA
             if 'captcha' in html.lower() or 'robot check' in html.lower():
-                logging.warning("⚠️  CAPTCHA DETECTED! Please solve it manually in the browser window...")
-                logging.warning("⏳ Waiting for you to solve CAPTCHA... (checking every 5 seconds)")
+                logger.warning("⚠️  CAPTCHA DETECTED! Please solve it manually in the browser window...")
+                logger.warning("⏳ Waiting for you to solve CAPTCHA... (checking every 5 seconds)")
                 
                 # Wait for user to solve CAPTCHA
                 captcha_solved = False
@@ -206,25 +215,25 @@ class SeleniumAmazonScraper(AmazonScraper):
                         current_html = self.driver.page_source
                         if 'captcha' not in current_html.lower() and 'robot check' not in current_html.lower():
                             captcha_solved = True
-                            logging.info("✅ CAPTCHA solved! Continuing...")
+                            logger.info("✅ CAPTCHA solved! Continuing...")
                             html = current_html  # Update HTML with the solved page
                         else:
-                            logging.debug(f"Still waiting... ({wait_time}s elapsed)")
+                            logger.debug(f"Still waiting... ({wait_time}s elapsed)")
                     except Exception as e:
-                        logging.error(f"Error checking CAPTCHA status: {e}")
+                        logger.error(f"Error checking CAPTCHA status: {e}")
                         break
                 
                 if not captcha_solved:
-                    logging.error("❌ CAPTCHA not solved within 5 minutes. Skipping this page.")
+                    logger.error("❌ CAPTCHA not solved within 5 minutes. Skipping this page.")
                     return None
             
             return html
             
         except WebDriverException as e:
-            logging.error(f"Selenium error fetching {url}: {e}")
+            logger.error(f"Selenium error fetching {url}: {e}")
             return None
         except Exception as e:
-            logging.error(f"Error fetching {url}: {e}")
+            logger.error(f"Error fetching {url}: {e}")
             return None
     
     def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
@@ -235,7 +244,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         
         # Extract real URL from redirects
         real_url = self._extract_real_url(product_url)
-        logging.info(f"Scraping {real_url}")
+        logger.info(f"Scraping {real_url}")
         
         product_data = {
             'url': real_url,
@@ -251,7 +260,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         try:
             # Simplified strategy: Direct navigation with human-like delays
             html_content = self._fetch_page(real_url)
-            logging.debug(f"Got HTML {real_url}")
+            logger.debug(f"Got HTML {real_url}")
             
             if not html_content:
                 product_data['error'] = "Failed to fetch page"
@@ -278,11 +287,11 @@ class SeleniumAmazonScraper(AmazonScraper):
                 
                 product_data['attributes'] = attributes
             else:
-                logging.warning(f"No shared patterns available for extraction")
+                logger.warning(f"No shared patterns available for extraction")
             
             # Store HTML snippet if no attributes found
             if not product_data['attributes']:
-                logging.warning(f"No attributes extracted for {real_url}")
+                logger.warning(f"No attributes extracted for {real_url}")
                 product_data['_html_snippet'] = html_content[:5000]  # First 5000 chars
             
             self.stats['products_scraped'] += 1
@@ -290,11 +299,11 @@ class SeleniumAmazonScraper(AmazonScraper):
                 self.stats['products_with_attributes'] += 1
         
         except Exception as e:
-            logging.error(f"Error scraping product {real_url}: {e}")
+            logger.error(f"Error scraping product {real_url}: {e}")
             product_data['error'] = str(e)
             self.stats['errors'] += 1
         
-        logging.debug(f"Analyzed HTML {real_url}")
+        logger.debug(f"Analyzed HTML {real_url}")
         return product_data
     
     def scrape_products_from_asins(self, category: Dict[str, Any], max_products: Optional[int] = None, asin_dir: Optional[str] = None) -> Dict[str, Any]:
@@ -310,9 +319,9 @@ class SeleniumAmazonScraper(AmazonScraper):
             Processing results dictionary
         """
         category_name = category['name']
-        logging.info(f"\n{'='*60}")
-        logging.info(f"Scraping products from ASINs for category: {category_name}")
-        logging.info(f"{'='*60}")
+        logger.info(f"\n{'='*60}")
+        logger.info(f"Scraping products from ASINs for category: {category_name}")
+        logger.info(f"{'='*60}")
         
         log_data = {
             'category': category_name,
@@ -332,7 +341,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             asin_file = os.path.join(asin_directory, f"amazon_asin_{safe_name}.json")
             
             if not os.path.exists(asin_file):
-                logging.warning(f"ASIN file not found: {asin_file}")
+                logger.warning(f"ASIN file not found: {asin_file}")
                 log_data['errors'].append(f"ASIN file not found: {asin_file}")
                 self.save_log(category_name, log_data)
                 return log_data
@@ -341,23 +350,23 @@ class SeleniumAmazonScraper(AmazonScraper):
                 asins = json.load(f)
             
             if not isinstance(asins, list):
-                logging.error(f"Invalid ASIN file format: expected list, got {type(asins)}")
+                logger.error(f"Invalid ASIN file format: expected list, got {type(asins)}")
                 log_data['errors'].append("Invalid ASIN file format")
                 self.save_log(category_name, log_data)
                 return log_data
             
             log_data['asins_loaded'] = len(asins)
-            logging.info(f"Loaded {len(asins)} ASINs from {asin_file}")
+            logger.info(f"Loaded {len(asins)} ASINs from {asin_file}")
             
             if not asins:
-                logging.warning(f"No ASINs found in {asin_file}")
+                logger.warning(f"No ASINs found in {asin_file}")
                 self.save_log(category_name, log_data)
                 return log_data
             
             # Limit ASINs if specified
             if max_products and max_products > 0:
                 asins = asins[:max_products]
-                logging.info(f"Limiting to {max_products} products")
+                logger.info(f"Limiting to {max_products} products")
             
             # Step 2: Scrape product details for each ASIN
             scraped_products = []
@@ -365,12 +374,12 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             for idx, asin in enumerate(asins, 1):
                 if not asin or not isinstance(asin, str):
-                    logging.warning(f"Invalid ASIN at index {idx-1}: {asin}")
+                    logger.warning(f"Invalid ASIN at index {idx-1}: {asin}")
                     continue
                 
                 # Construct product URL
                 product_url = f"{self.base_url}/dp/{asin}"
-                logging.info(f"\nScraping product {idx}/{len(asins)}: {product_url}")
+                logger.info(f"\nScraping product {idx}/{len(asins)}: {product_url}")
                 
                 try:
                     product_data = self.scrape_product_details(product_url, category)
@@ -388,7 +397,7 @@ class SeleniumAmazonScraper(AmazonScraper):
                         self.wait_between_requests()
                         
                 except Exception as e:
-                    logging.error(f"Error scraping ASIN {asin}: {e}")
+                    logger.error(f"Error scraping ASIN {asin}: {e}")
                     log_data['errors'].append(f"ASIN {asin}: {str(e)}")
                     self.stats['errors'] += 1
             
@@ -398,18 +407,18 @@ class SeleniumAmazonScraper(AmazonScraper):
             )
             log_data['products'] = scraped_products
             
-            # Step 3: Analyze patterns for logging (but don't save to config)
+            # Step 3: Analyze patterns for logger (but don't save to config)
             # Patterns are now managed centrally in amazon_shared.json
             if analyses:
-                logging.info(f"\nAnalyzed {len(analyses)} products for {category_name}")
+                logger.info(f"\nAnalyzed {len(analyses)} products for {category_name}")
                 learned_patterns = self.pattern_learner.learn_patterns(analyses, category_name)
                 
                 if learned_patterns['patterns_found']:
                     log_data['patterns_analyzed'] = True
                     log_data['learned_patterns'] = learned_patterns
-                    logging.info(f"✓ Analyzed {len(learned_patterns['rules'])} patterns for {category_name} (not saved - using shared patterns)")
+                    logger.info(f"✓ Analyzed {len(learned_patterns['rules'])} patterns for {category_name} (not saved - using shared patterns)")
                 else:
-                    logging.warning(f"No patterns found for {category_name}")
+                    logger.warning(f"No patterns found for {category_name}")
                     
                     # Save HTML content for manual analysis
                     for product in scraped_products:
@@ -433,14 +442,14 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             self.stats['categories_processed'] += 1
             
-            logging.info(f"\n✓ Completed scraping {category_name}")
-            logging.info(f"  ASINs loaded: {log_data['asins_loaded']}")
-            logging.info(f"  Products scraped: {log_data['products_scraped']}")
-            logging.info(f"  Products with attributes: {log_data['products_with_attributes']}")
-            logging.info(f"  Patterns learned: {log_data['patterns_learned']}")
+            logger.info(f"\n✓ Completed scraping {category_name}")
+            logger.info(f"  ASINs loaded: {log_data['asins_loaded']}")
+            logger.info(f"  Products scraped: {log_data['products_scraped']}")
+            logger.info(f"  Products with attributes: {log_data['products_with_attributes']}")
+            logger.info(f"  Patterns learned: {log_data['patterns_learned']}")
         
         except Exception as e:
-            logging.error(f"Error scraping products from ASINs for {category_name}: {e}")
+            logger.error(f"Error scraping products from ASINs for {category_name}: {e}")
             log_data['errors'].append(str(e))
             self.save_log(category_name, log_data)
             self.stats['errors'] += 1
@@ -466,7 +475,7 @@ class SeleniumAmazonScraper(AmazonScraper):
         if self.driver:
             try:
                 self.driver.quit()
-                logging.info("✓ Selenium driver closed")
+                logger.info("✓ Selenium driver closed")
             except:
                 pass
     
@@ -488,13 +497,13 @@ class SeleniumAmazonScraper(AmazonScraper):
             List of ASIN strings
         """
         category_name = category['name']
-        logging.info(f"Scanning ASINs for category: {category_name}")
+        logger.info(f"Scanning ASINs for category: {category_name}")
         
         all_asins = []
         
         try:
             # Navigate to search page
-            logging.info(f"🔍 Searching for: {category_name}")
+            logger.info(f"🔍 Searching for: {category_name}")
             self.driver.get(self.base_url)
             time.sleep(random.uniform(1, 2))
             
@@ -511,13 +520,13 @@ class SeleniumAmazonScraper(AmazonScraper):
                 
                 time.sleep(random.uniform(0.5, 1.0))
                 search_input.send_keys(Keys.RETURN)
-                logging.info("✅ Submitted search")
+                logger.info("✅ Submitted search")
                 
                 # Wait for search results to load
                 time.sleep(random.uniform(2, 4))
                 
             except NoSuchElementException:
-                logging.warning("⚠️  Search bar not found, using direct URL")
+                logger.warning("⚠️  Search bar not found, using direct URL")
                 from urllib.parse import quote_plus
                 search_query = quote_plus(category_name)
                 search_url = f"{self.base_url}/s?k={search_query}"
@@ -526,10 +535,10 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             # Scan pages
             for page_num in range(1, max_pages + 1):
-                logging.info(f"📄 Scanning page {page_num}...")
+                logger.info(f"📄 Scanning page {page_num}...")
                 
                 # Step 1: Scroll to bottom to fully load all products
-                logging.debug("  Scrolling to bottom to load all products...")
+                logger.debug("  Scrolling to bottom to load all products...")
                 self._scroll_to_bottom()
                 
                 # Step 2: Extract ASINs from current page
@@ -537,23 +546,23 @@ class SeleniumAmazonScraper(AmazonScraper):
                 
                 if page_asins:
                     all_asins.extend(page_asins)
-                    logging.info(f"  Found {len(page_asins)} ASINs on page {page_num} (total: {len(all_asins)})")
+                    logger.info(f"  Found {len(page_asins)} ASINs on page {page_num} (total: {len(all_asins)})")
                 else:
-                    logging.warning(f"  No ASINs found on page {page_num}")
+                    logger.warning(f"  No ASINs found on page {page_num}")
                 
                 # Step 3: Try to go to next page (if not on last page)
                 if page_num < max_pages:
                     if not self._go_to_next_page():
-                        logging.info(f"  No more pages available. Stopping at page {page_num}")
+                        logger.info(f"  No more pages available. Stopping at page {page_num}")
                         break
                     
                     # Wait for next page to load
                     time.sleep(random.uniform(2, 4))
             
-            logging.info(f"✓ Completed scanning. Total ASINs found: {len(all_asins)}")
+            logger.info(f"✓ Completed scanning. Total ASINs found: {len(all_asins)}")
             
         except Exception as e:
-            logging.error(f"Error scanning ASINs for {category_name}: {e}")
+            logger.error(f"Error scanning ASINs for {category_name}: {e}")
             self.stats['errors'] += 1
         
         return all_asins
@@ -570,20 +579,20 @@ class SeleniumAmazonScraper(AmazonScraper):
             self.driver.execute_script("window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });")
             
             # Wait for pagination buttons to be present (indicates page is fully loaded)
-            logging.debug("  Waiting for pagination buttons...")
+            logger.debug("  Waiting for pagination buttons...")
             try:
                 WebDriverWait(self.driver, 30).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, "a.s-pagination-item"))
                 )
-                logging.debug("  ✓ Pagination buttons found")
+                logger.debug("  ✓ Pagination buttons found")
             except TimeoutException:
-                logging.warning("  ⚠️  Pagination buttons not found within 30s timeout, continuing anyway...")
+                logger.warning("  ⚠️  Pagination buttons not found within 30s timeout, continuing anyway...")
             
             # Scroll to absolute bottom
             self.driver.execute_script("window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });")
             
         except Exception as e:
-            logging.debug(f"Error scrolling to bottom: {e}")
+            logger.debug(f"Error scrolling to bottom: {e}")
             pass
     
     def _extract_asins_from_page(self) -> List[str]:
@@ -621,7 +630,7 @@ class SeleniumAmazonScraper(AmazonScraper):
                         asins.append(asin)
             
         except Exception as e:
-            logging.debug(f"Error extracting ASINs: {e}")
+            logger.debug(f"Error extracting ASINs: {e}")
         
         return asins
     
@@ -662,7 +671,7 @@ class SeleniumAmazonScraper(AmazonScraper):
                     
                     # Click the button
                     next_button[0].click()
-                    logging.info(f"  → Clicked pagination button for page {next_page_num}")
+                    logger.info(f"  → Clicked pagination button for page {next_page_num}")
                     return True
             
             # Fallback: try to find "Next" button
@@ -675,13 +684,13 @@ class SeleniumAmazonScraper(AmazonScraper):
                 self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", next_buttons[0])
                 time.sleep(random.uniform(0.5, 1.0))
                 next_buttons[0].click()
-                logging.info("  → Clicked 'Next' pagination button")
+                logger.info("  → Clicked 'Next' pagination button")
                 return True
             
             return False
             
         except Exception as e:
-            logging.debug(f"Error navigating to next page: {e}")
+            logger.debug(f"Error navigating to next page: {e}")
             return False
     
     def _get_current_page_number(self) -> Optional[int]:
@@ -710,7 +719,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             return 1
             
         except Exception as e:
-            logging.debug(f"Error getting current page number: {e}")
+            logger.debug(f"Error getting current page number: {e}")
             return 1
     
     def save_asins(self, category: Dict[str, Any], asins: List[str]):
@@ -742,15 +751,15 @@ class SeleniumAmazonScraper(AmazonScraper):
                 # Atomic rename
                 os.replace(temp_file, output_file)
                 
-                logging.info(f"✓ Saved {len(asins)} ASINs for {category_name} to {output_file}")
+                logger.info(f"✓ Saved {len(asins)} ASINs for {category_name} to {output_file}")
                 return
                 
             except (IOError, OSError) as e:
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay * (attempt + 1))
                     continue
-                logging.error(f"Error saving ASINs for {category_name} (attempt {attempt + 1}/{max_retries}): {e}")
+                logger.error(f"Error saving ASINs for {category_name} (attempt {attempt + 1}/{max_retries}): {e}")
         
         # If all retries failed, log error
-        logging.error(f"Failed to save ASINs for {category_name} after {max_retries} attempts")
+        logger.error(f"Failed to save ASINs for {category_name} after {max_retries} attempts")
 
