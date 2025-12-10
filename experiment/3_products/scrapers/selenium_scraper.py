@@ -261,28 +261,20 @@ class SeleniumAmazonScraper(AmazonScraper):
             product_data['images'] = self._extract_images(tree)
             product_data['description'] = self._extract_description(tree)
             
-            # Analyze page for patterns if we don't have rules for this category yet
+            # Extract attributes using shared patterns from amazon_shared.json
             category_name = category['name']
-            if category_name not in self.extraction_config:
-                logging.info(f"Learning patterns for {category_name}")
-                analysis = self.pattern_learner.analyze_product_page(html_content, real_url)
-                product_data['_analysis'] = analysis
-            else:
-                logging.info(f"Using existing rules for {category_name}")
-                analysis = None
+            shared_rules = self.pattern_learner.get_shared_patterns()
             
-            # Extract attributes using learned rules
-            if category_name in self.extraction_config:
-                rules = self.extraction_config[category_name].get('rules', [])
-                attributes = self.pattern_learner.extract_with_rules(html_content, rules)
+            if shared_rules:
+                attributes = self.pattern_learner.extract_with_rules(html_content, shared_rules)
+                
+                # Extract description from attributes if present (from inner_html rules)
+                if 'description' in attributes:
+                    product_data['description'] = attributes.pop('description')
+                
                 product_data['attributes'] = attributes
             else:
-                # Try to extract using analysis
-                if analysis and analysis.get('success'):
-                    rules = analysis.get('extraction_rules', [])
-                    if rules:
-                        attributes = self.pattern_learner.extract_with_rules(html_content, rules)
-                        product_data['attributes'] = attributes
+                logging.warning(f"No shared patterns available for extraction")
             
             # Store HTML snippet if no attributes found
             if not product_data['attributes']:
@@ -358,7 +350,7 @@ class SeleniumAmazonScraper(AmazonScraper):
                 return log_data
             
             # Limit ASINs if specified
-            if max_products:
+            if max_products and max_products > 0:
                 asins = asins[:max_products]
                 logging.info(f"Limiting to {max_products} products")
             
@@ -401,21 +393,18 @@ class SeleniumAmazonScraper(AmazonScraper):
             )
             log_data['products'] = scraped_products
             
-            # Step 3: Learn patterns if we have analyses
-            if analyses and category_name not in self.extraction_config:
-                logging.info(f"\nLearning patterns from {len(analyses)} products")
+            # Step 3: Analyze patterns for logging (but don't save to config)
+            # Patterns are now managed centrally in amazon_shared.json
+            if analyses:
+                logging.info(f"\nAnalyzed {len(analyses)} products for {category_name}")
                 learned_patterns = self.pattern_learner.learn_patterns(analyses, category_name)
                 
                 if learned_patterns['patterns_found']:
-                    # Save learned patterns to config
-                    self.extraction_config[category_name] = learned_patterns
-                    self.save_config(self.extraction_config)
-                    log_data['patterns_learned'] = True
+                    log_data['patterns_analyzed'] = True
                     log_data['learned_patterns'] = learned_patterns
-                    
-                    logging.info(f"✓ Learned {len(learned_patterns['rules'])} patterns for {category_name}")
+                    logging.info(f"✓ Analyzed {len(learned_patterns['rules'])} patterns for {category_name} (not saved - using shared patterns)")
                 else:
-                    logging.warning(f"No patterns learned for {category_name}")
+                    logging.warning(f"No patterns found for {category_name}")
                     
                     # Save HTML content for manual analysis
                     for product in scraped_products:

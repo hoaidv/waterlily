@@ -73,7 +73,7 @@ class ScraperOrchestrator:
         return {
             'target_categories': [],
             'websites': ['amazon'],
-            'products_per_category_per_website': 10,
+            'products_per_category_per_website': 5,
             'rate_limiting': {
                 'delay_range': [2.0, 4.0],
                 'max_retries': 3,
@@ -200,10 +200,7 @@ class ScraperOrchestrator:
             self.logger.warning(f"Categories not found in database: {', '.join(missing)}")
         
         # Process each category with each scraper
-        if self.asin_dir:
-            max_products = None
-        else: 
-            max_products = self.config.get('products_per_category_per_website', 10)
+        max_products = self.config.get('products_per_category_per_website', 10)
         
         for category in categories:
             category_name = category['name']

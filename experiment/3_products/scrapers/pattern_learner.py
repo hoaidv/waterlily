@@ -5,6 +5,8 @@ Analyzes HTML pages to learn extraction patterns for product attributes
 """
 
 import re
+import json
+import os
 from typing import Dict, List, Any, Optional, Tuple, Set
 from collections import Counter, defaultdict
 from lxml import html, etree
@@ -17,10 +19,18 @@ class PatternLearner:
     Focuses on finding tables and structured data
     """
     
-    def __init__(self):
-        """Initialize pattern learner"""
+    def __init__(self, config_dir: Optional[str] = None):
+        """
+        Initialize pattern learner
+        
+        Args:
+            config_dir: Directory containing config files (defaults to parent of current dir)
+        """
         self.patterns = {}
         self.pattern_frequency = defaultdict(lambda: defaultdict(int))
+        self.config_dir = config_dir
+        self.shared_patterns = None
+        self._load_shared_patterns()
     
     def analyze_product_page(self, html_content: str, product_url: str) -> Dict[str, Any]:
         """
@@ -781,6 +791,27 @@ class PatternLearner:
                                 if self._is_valid_attribute_name(kv['key']):
                                     normalized_key = self._normalize_attribute_name(kv['key'])
                                     attributes[normalized_key] = kv['value']
+                    
+                    elif extraction_method == 'inner_html':
+                        # Extract inner HTML content
+                        # Get the target field name from the rule (defaults to 'description')
+                        target_field = rule.get('target_field', 'description')
+                        
+                        # Get inner HTML by converting all children to HTML strings
+                        # This gives us the inner HTML (content inside the element, excluding the element itself)
+                        inner_html_parts = []
+                        for child in elem:
+                            child_html = etree.tostring(child, encoding='unicode', method='html')
+                            inner_html_parts.append(child_html)
+                        
+                        inner_html = ''.join(inner_html_parts)
+                        
+                        # If no children, get text content as fallback
+                        if not inner_html:
+                            inner_html = self._extract_text(elem)
+                        
+                        if inner_html:
+                            attributes[target_field] = inner_html
                 
             except Exception as e:
                 logging.warning(f"Error applying rule {rule.get('xpath')}: {e}")
@@ -811,4 +842,85 @@ class PatternLearner:
         normalized = normalized.strip('_')
         
         return normalized
+    
+    def _load_shared_patterns(self):
+        """
+        Load shared patterns from amazon_shared.json
+        These are merged patterns that work across all categories
+        """
+        if self.config_dir is None:
+            # Default to config directory relative to scrapers directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            self.config_dir = os.path.join(os.path.dirname(current_dir), 'config')
+        
+        shared_config_file = os.path.join(self.config_dir, 'amazon_shared.json')
+        
+        if os.path.exists(shared_config_file):
+            try:
+                with open(shared_config_file, 'r', encoding='utf-8') as f:
+                    shared_data = json.load(f)
+                    self.shared_patterns = shared_data.get('patterns', [])
+                    logging.info(f"Loaded {len(self.shared_patterns)} shared patterns from {shared_config_file}")
+            except Exception as e:
+                logging.warning(f"Failed to load shared patterns from {shared_config_file}: {e}")
+                self.shared_patterns = []
+        else:
+            logging.info(f"Shared patterns file not found: {shared_config_file}")
+            self.shared_patterns = []
+    
+    def get_shared_patterns(self) -> List[Dict[str, Any]]:
+        """
+        Get shared patterns loaded from amazon_shared.json
+        
+        Returns:
+            List of shared pattern rules
+        """
+        return self.shared_patterns or []
+    
+    def combine_rules(self, category_rules: List[Dict[str, Any]], shared_rules: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
+        """
+        Combine category-specific rules with shared rules.
+        Category-specific rules take priority (higher priority = lower number).
+        Rules are sorted by priority (lower is better).
+        
+        Args:
+            category_rules: Category-specific rules from amazon_config.json
+            shared_rules: Shared rules from amazon_shared.json (if None, uses loaded shared patterns)
+            
+        Returns:
+            Combined and sorted list of rules
+        """
+        if shared_rules is None:
+            shared_rules = self.get_shared_patterns()
+        
+        # Create a set to track which patterns we've seen (by type, xpath, extraction_method)
+        seen_patterns = set()
+        combined_rules = []
+        
+        # First, add category-specific rules (they take priority)
+        for rule in category_rules:
+            pattern_key = (
+                rule.get('type'),
+                rule.get('xpath'),
+                rule.get('extraction_method')
+            )
+            if pattern_key not in seen_patterns:
+                combined_rules.append(rule)
+                seen_patterns.add(pattern_key)
+        
+        # Then, add shared rules that aren't already in category rules
+        for rule in shared_rules:
+            pattern_key = (
+                rule.get('type'),
+                rule.get('xpath'),
+                rule.get('extraction_method')
+            )
+            if pattern_key not in seen_patterns:
+                combined_rules.append(rule)
+                seen_patterns.add(pattern_key)
+        
+        # Sort by priority (lower is better)
+        combined_rules.sort(key=lambda x: x.get('priority', 999))
+        
+        return combined_rules
 

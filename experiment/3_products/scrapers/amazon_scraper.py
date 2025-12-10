@@ -26,7 +26,9 @@ class AmazonScraper(BaseScraper):
         super().__init__(config, output_dir)
         
         self.base_url = "https://www.amazon.com"
-        self.pattern_learner = PatternLearner()
+        # Pass config_dir to PatternLearner so it can load shared patterns
+        config_dir = os.path.join(os.path.dirname(output_dir), "config")
+        self.pattern_learner = PatternLearner(config_dir=config_dir)
         
         # Set up session with retries
         self.session = requests.Session()

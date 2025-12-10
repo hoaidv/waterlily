@@ -10,7 +10,7 @@
     "newegg",
     "craigslist"
   ],
-  "products_per_category_per_website": 10,
+  "products_per_category_per_website": 3,
   "sample_mode": {
     "enabled": true,
     "products_per_website": 5
