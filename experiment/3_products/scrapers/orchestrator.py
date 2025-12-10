@@ -122,7 +122,8 @@ class ScraperOrchestrator:
                 self.scrapers['amazon'] = SeleniumAmazonScraper(
                     self.config,
                     output_dir=output_dir,
-                    browser='Local'
+                    browser='Local',
+                    headless=True
                 )
                 self.logger.info(f"✓ Initialized Selenium Amazon scraper")
             # Add more scrapers here as needed
@@ -155,26 +156,81 @@ class ScraperOrchestrator:
             self.logger.error(f"Failed to load categories from database: {e}")
             return []
     
-    def run(self, category_names: Optional[List[str]] = None):
+    def _process_product_scraping_worker(self, category: Dict[str, Any], website: str, max_products: int,
+                                          worker_id: int, total_categories: int, category_index: int, 
+                                          scraper: SeleniumAmazonScraper):
+        """
+        Worker function to scrape products for a single category (for parallel processing)
+        
+        Args:
+            category: Category data to process
+            website: Website name (e.g., 'amazon')
+            max_products: Maximum number of products to scrape
+            worker_id: ID of the worker thread
+            total_categories: Total number of categories
+            category_index: Index of this category in the list
+            scraper: Reusable scraper instance for this worker (reuses browser)
+        """
+        category_name = category['name']
+        
+        try:
+            self.logger.info(f"{'='*80}")
+            self.logger.info(f"[Worker {worker_id}] [{category_index}/{total_categories}] SCRAPING PRODUCTS FOR: {category_name} ({website})")
+            self.logger.info(f"{'='*80}")
+            
+            # Scrape products (reuse the same browser)
+            result = scraper.process_category(category, max_products=max_products, asin_dir=self.asin_dir)
+            
+            # Update statistics (thread-safe)
+            with self.progress_lock:
+                self.stats['categories_processed'] += 1
+                self.stats['total_products_scraped'] += result.get('products_scraped', 0)
+                self.stats['total_products_with_attributes'] += result.get('products_with_attributes', 0)
+            
+            self.logger.info(f"[Worker {worker_id}] ✓ Completed {category_name} on {website}")
+            self.logger.info(f"[Worker {worker_id}]   Products scraped: {result.get('products_scraped', 0)}")
+            self.logger.info(f"[Worker {worker_id}]   Products with attributes: {result.get('products_with_attributes', 0)}")
+            
+            return {'success': True, 'category_name': category_name, 'result': result}
+            
+        except Exception as e:
+            self.logger.error(f"[Worker {worker_id}] Error processing {category_name} on {website}: {e}")
+            with self.progress_lock:
+                self.stats['errors'] += 1
+            return {'success': False, 'category_name': category_name, 'error': str(e)}
+    
+    def run(self, category_names: Optional[List[str]] = None, num_workers: int = 1):
         """
         Run scraping orchestrator
         
         Args:
             category_names: Optional list of category names to scrape
-                           If None, uses target_categories from config
+                           If None or empty, loads ALL categories from database
+                           Otherwise, uses target_categories from config if available
+            num_workers: Number of parallel browser instances (default: 1, sequential)
         """
         self.stats['start_time'] = datetime.now()
         self.logger.info(f"Starting scraping run at {self.stats['start_time']}")
         
-        # Get categories
-        if category_names is None:
+        # Determine which categories to load
+        # If category_names is None or empty, load ALL categories from database
+        # Otherwise, use the provided category names or from config
+        if category_names is None or len(category_names) == 0:
+            # Try config first, but if empty, load all
             category_names = self.config.get('target_categories', [])
+            if not category_names:
+                self.logger.info("No specific categories provided - will scrape ALL categories from database")
+                categories = self.load_categories_from_db(None)  # Load all categories
+            else:
+                self.logger.info(f"Target categories from config: {', '.join(category_names)}")
+                categories = self.load_categories_from_db(category_names)
+        else:
+            self.logger.info(f"Target categories: {', '.join(category_names)}")
+            categories = self.load_categories_from_db(category_names)
         
-        if not category_names:
-            self.logger.error("No target categories specified")
+        if not categories:
+            self.logger.error("No categories loaded from database")
             return
-        
-        self.logger.info(f"Target categories: {', '.join(category_names)}")
         
         # Log ASIN directory if specified
         if self.asin_dir:
@@ -186,47 +242,110 @@ class ScraperOrchestrator:
             )
             self.logger.info(f"ASIN directory: {output_dir} (default)")
         
-        # Load categories from database - match by exact name
-        categories = self.load_categories_from_db(category_names)
-        
-        if not categories:
-            self.logger.error("No categories loaded from database")
-            return
-        
-        # Verify that we have matching categories
-        loaded_names = {cat['name'] for cat in categories}
-        requested_names = set(category_names)
-        missing = requested_names - loaded_names
-        if missing:
-            self.logger.warning(f"Categories not found in database: {', '.join(missing)}")
+        # Verify that we have matching categories (only if specific categories were requested)
+        if category_names and len(category_names) > 0:
+            loaded_names = {cat['name'] for cat in categories}
+            requested_names = set(category_names)
+            missing = requested_names - loaded_names
+            if missing:
+                self.logger.warning(f"Categories not found in database: {', '.join(missing)}")
         
         # Process each category with each scraper
         max_products = self.config.get('products_per_category_per_website', 10)
         
+        # Prepare tasks: (category, website) pairs
+        tasks = []
         for category in categories:
-            category_name = category['name']
-            self.logger.info(f"\n{'='*80}")
-            self.logger.info(f"CATEGORY: {category_name}")
-            self.logger.info(f"{'='*80}")
+            for website in self.scrapers.keys():
+                tasks.append((category, website))
+        
+        total_tasks = len(tasks)
+        self.logger.info(f"\n📋 Total tasks: {total_tasks} (categories × websites)")
+        self.logger.info(f"🔧 Parallel workers: {num_workers}")
+        
+        # Process tasks
+        if num_workers > 1:
+            # Parallel processing with multiple browsers
+            self.logger.info(f"\n🚀 Starting parallel processing with {num_workers} workers...")
             
-            for website, scraper in self.scrapers.items():
-                self.logger.info(f"\nProcessing with {website} scraper...")
-                
-                try:
-                    result = scraper.process_category(category, max_products=max_products, asin_dir=self.asin_dir)
+            # Create one scraper per worker (reused for all tasks in that worker)
+            output_dir = os.path.join(
+                os.path.dirname(__file__),
+                self.config.get('output', {}).get('directory', '../output')
+            )
+            scrapers = {}
+            for worker_id in range(1, num_workers + 1):
+                scrapers[worker_id] = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local', headless=True)
+                self.logger.info(f"  Created browser for worker {worker_id}")
+            
+            try:
+                with ThreadPoolExecutor(max_workers=num_workers) as executor:
+                    # Submit all tasks
+                    future_to_task = {}
+                    for task_idx, (category, website) in enumerate(tasks, 1):
+                        worker_id = (task_idx % num_workers) + 1
+                        scraper = scrapers[worker_id]
+                        future = executor.submit(
+                            self._process_product_scraping_worker,
+                            category, website, max_products,
+                            worker_id, total_tasks, task_idx, scraper
+                        )
+                        future_to_task[future] = (category, website)
                     
-                    # Update statistics
-                    self.stats['categories_processed'] += 1
-                    self.stats['total_products_scraped'] += result.get('products_scraped', 0)
-                    self.stats['total_products_with_attributes'] += result.get('products_with_attributes', 0)
-                    
-                    self.logger.info(f"✓ Completed {category_name} on {website}")
-                    self.logger.info(f"  Products scraped: {result.get('products_scraped', 0)}")
-                    self.logger.info(f"  Products with attributes: {result.get('products_with_attributes', 0)}")
+                    # Process completed tasks
+                    for future in as_completed(future_to_task):
+                        category, website = future_to_task[future]
+                        try:
+                            result = future.result()
+                            if result['success']:
+                                self.logger.debug(f"Task {category['name']} ({website}) completed successfully")
+                            else:
+                                self.logger.error(f"Task {category['name']} ({website}) failed: {result.get('error', 'Unknown error')}")
+                        except Exception as e:
+                            self.logger.error(f"Exception processing task {category['name']} ({website}): {e}")
+            finally:
+                # Close all scrapers after all work is done
+                self.logger.info(f"\n🔒 Closing all browser instances...")
+                for worker_id, scraper in scrapers.items():
+                    if hasattr(scraper, 'close'):
+                        try:
+                            scraper.close()
+                            self.logger.info(f"  ✓ Closed browser for worker {worker_id}")
+                        except Exception as e:
+                            self.logger.warning(f"  ⚠️  Error closing browser for worker {worker_id}: {e}")
+        else:
+            # Sequential processing (original behavior - create scraper once)
+            self.logger.info(f"\n🔄 Starting sequential processing...")
+            output_dir = os.path.join(
+                os.path.dirname(__file__),
+                self.config.get('output', {}).get('directory', '../output')
+            )
+            
+            # Use existing scrapers from initialization, but create new ones if needed
+            for category in categories:
+                category_name = category['name']
+                self.logger.info(f"\n{'='*80}")
+                self.logger.info(f"CATEGORY: {category_name}")
+                self.logger.info(f"{'='*80}")
                 
-                except Exception as e:
-                    self.logger.error(f"Error processing {category_name} on {website}: {e}")
-                    self.stats['errors'] += 1
+                for website, scraper in self.scrapers.items():
+                    self.logger.info(f"\nProcessing with {website} scraper...")
+                    
+                    try:
+                        result = scraper.process_category(category, max_products=max_products, asin_dir=self.asin_dir)
+                        
+                        # Update statistics
+                        self.stats['categories_processed'] += 1
+                        self.stats['total_products_scraped'] += result.get('products_scraped', 0)
+                        self.stats['total_products_with_attributes'] += result.get('products_with_attributes', 0)
+                        
+                        self.logger.info(f"✓ Completed {category_name} on {website}")
+                        self.logger.info(f"  Products scraped: {result.get('products_scraped', 0)}")
+                        self.logger.info(f"  Products with attributes: {result.get('products_with_attributes', 0)}")
+                    
+                    except Exception as e:
+                        self.logger.error(f"Error processing {category_name} on {website}: {e}")
+                        self.stats['errors'] += 1
         
         # Finalize
         self.stats['end_time'] = datetime.now()
@@ -517,7 +636,7 @@ class ScraperOrchestrator:
             )
             scrapers = {}
             for worker_id in range(1, num_workers + 1):
-                scrapers[worker_id] = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local')
+                scrapers[worker_id] = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local', headless=True)
                 self.logger.info(f"  Created browser for worker {worker_id}")
             
             try:
@@ -562,7 +681,7 @@ class ScraperOrchestrator:
                 os.path.dirname(__file__),
                 self.config.get('output', {}).get('directory', '../output')
             )
-            scraper = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local')
+            scraper = SeleniumAmazonScraper(self.config, output_dir=output_dir, browser='Local', headless=True)
             try:
                 for idx, category in categories_to_process:
                     self._process_category_worker(
@@ -686,7 +805,7 @@ def main():
         '--workers',
         type=int,
         default=1,
-        help='Number of parallel browser instances (default: 1, sequential). Only used with --scan-asin'
+        help='Number of parallel browser instances (default: 1, sequential). Used with --scan-asin or --scrape-products'
     )
     parser.add_argument(
         '--asin-dir',
@@ -726,13 +845,15 @@ def main():
                 num_workers=num_workers
             )
     elif args.scrape_products:
+        num_workers = max(1, args.workers)  # Ensure at least 1 worker
+        
         if args.categories:
             print(f"\n🛒 Running PRODUCT SCRAPING MODE with categories: {', '.join(args.categories)}")
-            orchestrator.run(category_names=args.categories)
+            orchestrator.run(category_names=args.categories, num_workers=num_workers)
         else:
-            # Use categories from config
-            print(f"\n🛒 Running PRODUCT SCRAPING MODE with categories from config")
-            orchestrator.run()
+            # No categories provided - scrape ALL categories from database
+            print(f"\n🛒 Running PRODUCT SCRAPING MODE - will scrape ALL categories from database")
+            orchestrator.run(category_names=None, num_workers=num_workers)
     else:
         raise NotImplementedError('Please specify a mode to run')
 

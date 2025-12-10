@@ -22,7 +22,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from .amazon_scraper import AmazonScraper
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)

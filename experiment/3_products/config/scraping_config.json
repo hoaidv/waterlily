@@ -2,7 +2,7 @@
   "websites": [
     "amazon"
   ],
-  "products_per_category_per_website": 3,
+  "products_per_category_per_website": 1000,
   "sample_mode": {
     "enabled": true,
     "products_per_website": 5
