@@ -24,16 +24,18 @@ from scrapers.selenium_scraper import SeleniumAmazonScraper
 class ScraperOrchestrator:
     """Orchestrates scraping across multiple categories and websites"""
     
-    def __init__(self, config_file: str = "../config/scraping_config.json", use_selenium: bool = False):
+    def __init__(self, config_file: str = "../config/scraping_config.json", use_selenium: bool = False, asin_dir: Optional[str] = None):
         """
         Initialize orchestrator
         
         Args:
             config_file: Path to configuration file
             use_selenium: Whether to use Selenium scraper (for ASIN scanning)
+            asin_dir: Optional directory where ASIN files are located
         """
         self.config_file = config_file
         self.config = self._load_config()
+        self.asin_dir = asin_dir
         
         # Setup logging
         self._setup_logging()
@@ -180,12 +182,29 @@ class ScraperOrchestrator:
         
         self.logger.info(f"Target categories: {', '.join(category_names)}")
         
-        # Load categories from database
+        # Log ASIN directory if specified
+        if self.asin_dir:
+            self.logger.info(f"ASIN directory: {self.asin_dir}")
+        else:
+            output_dir = os.path.join(
+                os.path.dirname(__file__),
+                self.config.get('output', {}).get('directory', '../output')
+            )
+            self.logger.info(f"ASIN directory: {output_dir} (default)")
+        
+        # Load categories from database - match by exact name
         categories = self.load_categories_from_db(category_names)
         
         if not categories:
             self.logger.error("No categories loaded from database")
             return
+        
+        # Verify that we have matching categories
+        loaded_names = {cat['name'] for cat in categories}
+        requested_names = set(category_names)
+        missing = requested_names - loaded_names
+        if missing:
+            self.logger.warning(f"Categories not found in database: {', '.join(missing)}")
         
         # Process each category with each scraper
         max_products = self.config.get('products_per_category_per_website', 10)
@@ -200,7 +219,7 @@ class ScraperOrchestrator:
                 self.logger.info(f"\nProcessing with {website} scraper...")
                 
                 try:
-                    result = scraper.process_category(category, max_products=max_products)
+                    result = scraper.process_category(category, max_products=max_products, asin_dir=self.asin_dir)
                     
                     # Update statistics
                     self.stats['categories_processed'] += 1
@@ -654,6 +673,11 @@ def main():
         help='Scan for ASINs only (uses Selenium scraper)'
     )
     parser.add_argument(
+        '--scrape-products',
+        action='store_true',
+        help='Scrape product details from ASINs (uses Selenium scraper, requires ASIN files)'
+    )
+    parser.add_argument(
         '--max-pages',
         type=int,
         default=20,
@@ -670,12 +694,23 @@ def main():
         default=1,
         help='Number of parallel browser instances (default: 1, sequential). Only used with --scan-asin'
     )
+    parser.add_argument(
+        '--asin-dir',
+        type=str,
+        default=None,
+        help='Directory where ASIN files (amazon_asin_<category_name>.json) are located'
+    )
     
     args = parser.parse_args()
     
+    # Validate mutually exclusive modes
+    if args.scan_asin and args.scrape_products:
+        parser.error("--scan-asin and --scrape-products cannot be used together. Choose one mode.")
+    
     # Initialize orchestrator
-    use_selenium = args.scan_asin
-    orchestrator = ScraperOrchestrator(config_file=args.config, use_selenium=use_selenium)
+    # Use Selenium for both ASIN scanning and product scraping (since AmazonScraper doesn't work)
+    use_selenium = args.scan_asin or args.scrape_products
+    orchestrator = ScraperOrchestrator(config_file=args.config, use_selenium=use_selenium, asin_dir=args.asin_dir)
     
     # Determine categories
     if args.scan_asin:
@@ -683,16 +718,7 @@ def main():
         resume = not args.no_resume
         num_workers = max(1, args.workers)  # Ensure at least 1 worker
         
-        if args.sample:
-            sample_categories = ['Laptop', 'Smartphone', 'Headphones', 'Smart Watch', 'Tablet']
-            print(f"\n🔍 Running ASIN SCAN MODE with sample categories: {', '.join(sample_categories)}")
-            orchestrator.run_asin_scan(
-                category_names=sample_categories, 
-                max_pages=args.max_pages, 
-                resume=resume,
-                num_workers=num_workers
-            )
-        elif args.categories:
+        if args.categories:
             orchestrator.run_asin_scan(
                 category_names=args.categories, 
                 max_pages=args.max_pages, 
@@ -706,18 +732,16 @@ def main():
                 resume=resume,
                 num_workers=num_workers
             )
-    else:
-        # Normal scraping mode
-        if args.sample:
-            # Use sample categories for testing
-            sample_categories = ['Laptop', 'Smartphone', 'Headphones', 'Smart Watch', 'Tablet']
-            print(f"\n🔬 Running in SAMPLE MODE with categories: {', '.join(sample_categories)}")
-            orchestrator.run(category_names=sample_categories)
-        elif args.categories:
+    elif args.scrape_products:
+        if args.categories:
+            print(f"\n🛒 Running PRODUCT SCRAPING MODE with categories: {', '.join(args.categories)}")
             orchestrator.run(category_names=args.categories)
         else:
             # Use categories from config
+            print(f"\n🛒 Running PRODUCT SCRAPING MODE with categories from config")
             orchestrator.run()
+    else:
+        raise NotImplementedError('Please specify a mode to run')
 
 
 if __name__ == "__main__":

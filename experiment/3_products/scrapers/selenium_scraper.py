@@ -31,7 +31,6 @@ class SeleniumAmazonScraper(AmazonScraper):
         super().__init__(config, output_dir)
         
         self.driver = None
-        self.current_search_url = None  # Track current search page
         self._setup_driver()
     
     def _setup_driver(self):
@@ -151,7 +150,9 @@ class SeleniumAmazonScraper(AmazonScraper):
                     
                     # Re-scroll
                     try:
-                        self._human_like_scroll()
+                        scroll_amount = random.randint(300, 800)
+                        self.driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                        time.sleep(random.uniform(1.0, 2.0))
                     except:
                         pass
                     
@@ -222,139 +223,6 @@ class SeleniumAmazonScraper(AmazonScraper):
         except Exception as e:
             logging.error(f"Error fetching {url}: {e}")
             return None
-    
-    def search_products_by_category(self, category: Dict[str, Any]) -> list:
-        """
-        Override to use Selenium-based search
-        
-        Returns:
-            List of product dicts with 'url' key
-        """
-        category_name = category['name']
-        product_urls = self.search_products(category_name, max_products=10)
-        
-        # Convert URLs to product info dicts
-        products = [{'url': url, 'position': i+1} for i, url in enumerate(product_urls)]
-        return products
-    
-    def search_products(self, category_name: str, max_products: int = 10):
-        """
-        Override search_products to use Selenium with realistic search bar interaction
-        """
-        from urllib.parse import quote_plus
-        from lxml import html as lhtml
-        
-        products = []
-        
-        try:
-            # Navigate to Amazon homepage if not already there
-            logging.info("🏠 Navigating to Amazon homepage...")
-            self.driver.get(self.base_url)
-            time.sleep(random.uniform(2, 3))
-            
-            # Find and interact with search bar
-            logging.info(f"🔍 Searching for: {category_name}")
-            
-            try:
-                # Find search input
-                search_input = self.driver.find_element(By.CSS_SELECTOR, "input#twotabsearchtextbox")
-                
-                # Clear any existing text
-                search_input.clear()
-                time.sleep(random.uniform(0.3, 0.6))
-                
-                # Type search term character by character (human-like)
-                for char in category_name:
-                    search_input.send_keys(char)
-                    time.sleep(random.uniform(0.05, 0.15))  # Small delay between keystrokes
-                
-                logging.info("⌨️  Typed search term")
-                time.sleep(random.uniform(0.5, 1.0))
-                
-                # Submit search (press Enter)
-                search_input.send_keys(Keys.RETURN)
-                logging.info("✅ Submitted search")
-                
-                # Wait for search results to load
-                time.sleep(random.uniform(2, 4))
-                
-                # Get page source
-                html_content = self.driver.page_source
-                
-                # Store the current URL as search URL
-                search_url = self.driver.current_url
-                
-            except NoSuchElementException:
-                logging.warning("⚠️  Search bar not found, falling back to direct URL navigation")
-                # Fallback: use direct URL
-                search_query = quote_plus(category_name)
-                search_url = f"{self.base_url}/s?k={search_query}"
-                html_content = self._fetch_page(search_url)
-            
-            if not html_content:
-                logging.error("Failed to fetch search page")
-                return products
-            
-            # Parse search results
-            tree = lhtml.fromstring(html_content)
-            
-            # Find product links
-            product_selectors = [
-                '//div[@data-component-type="s-search-result"]//h2/a/@href',
-                '//div[@data-asin]//a[contains(@class, "s-link-style")]/@href',
-            ]
-            
-            all_hrefs = []
-            for selector in product_selectors:
-                hrefs = tree.xpath(selector)
-                all_hrefs.extend(hrefs)
-            
-            logging.info(f"Found {len(all_hrefs)} products with selector: {product_selectors}")
-            
-            # Filter and clean URLs
-            unique_urls = []
-            seen = set()
-            
-            for href in all_hrefs:
-                # Skip invalid URLs
-                if not href or href == '#' or href.startswith('javascript:'):
-                    continue
-                
-                # Skip author pages (URLs like /e/B0G3WYM4ZQ or /author/...)
-                if '/e/' in href or '/author/' in href or '/-/e/' in href:
-                    continue
-                
-                # Make absolute URL
-                if href.startswith('/'):
-                    full_url = f"{self.base_url}{href}"
-                else:
-                    full_url = href
-                
-                # Extract real URL from redirects
-                real_url = self._extract_real_url(full_url)
-                
-                # Double-check after extraction (in case redirect resolved to author page)
-                if '/e/' in real_url or '/author/' in real_url or '/-/e/' in real_url:
-                    continue
-                
-                # Deduplicate
-                if real_url not in seen:
-                    seen.add(real_url)
-                    unique_urls.append(real_url)
-                    products.append(real_url)
-                
-                if len(products) >= max_products:
-                    break
-            
-            logging.info(f"Found {len(products)} unique products for {category_name}")
-            
-            # Store the search URL for later navigation
-            self.current_search_url = search_url
-            
-        except Exception as e:
-            logging.error(f"Error searching for {category_name}: {e}")
-        
-        return products
     
     def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -431,6 +299,173 @@ class SeleniumAmazonScraper(AmazonScraper):
             self.stats['errors'] += 1
         
         return product_data
+    
+    def scrape_products_from_asins(self, category: Dict[str, Any], max_products: Optional[int] = None, asin_dir: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Scrape products for a category by loading ASINs from JSON file
+        
+        Args:
+            category: Category data from database
+            max_products: Maximum number of products to scrape (None = all)
+            asin_dir: Optional directory where ASIN files are located (default: self.output_dir)
+            
+        Returns:
+            Processing results dictionary
+        """
+        category_name = category['name']
+        logging.info(f"\n{'='*60}")
+        logging.info(f"Scraping products from ASINs for category: {category_name}")
+        logging.info(f"{'='*60}")
+        
+        log_data = {
+            'category': category_name,
+            'category_id': category['id'],
+            'asins_loaded': 0,
+            'products_scraped': 0,
+            'products_with_attributes': 0,
+            'patterns_learned': False,
+            'products': [],
+            'errors': []
+        }
+        
+        try:
+            # Step 1: Load ASINs from JSON file
+            safe_name = self._sanitize_filename(category_name)
+            asin_directory = asin_dir if asin_dir else self.output_dir
+            asin_file = os.path.join(asin_directory, f"amazon_asin_{safe_name}.json")
+            
+            if not os.path.exists(asin_file):
+                logging.warning(f"ASIN file not found: {asin_file}")
+                log_data['errors'].append(f"ASIN file not found: {asin_file}")
+                self.save_log(category_name, log_data)
+                return log_data
+            
+            with open(asin_file, 'r', encoding='utf-8') as f:
+                asins = json.load(f)
+            
+            if not isinstance(asins, list):
+                logging.error(f"Invalid ASIN file format: expected list, got {type(asins)}")
+                log_data['errors'].append("Invalid ASIN file format")
+                self.save_log(category_name, log_data)
+                return log_data
+            
+            log_data['asins_loaded'] = len(asins)
+            logging.info(f"Loaded {len(asins)} ASINs from {asin_file}")
+            
+            if not asins:
+                logging.warning(f"No ASINs found in {asin_file}")
+                self.save_log(category_name, log_data)
+                return log_data
+            
+            # Limit ASINs if specified
+            if max_products:
+                asins = asins[:max_products]
+                logging.info(f"Limiting to {max_products} products")
+            
+            # Step 2: Scrape product details for each ASIN
+            scraped_products = []
+            analyses = []
+            
+            for idx, asin in enumerate(asins, 1):
+                if not asin or not isinstance(asin, str):
+                    logging.warning(f"Invalid ASIN at index {idx-1}: {asin}")
+                    continue
+                
+                # Construct product URL
+                product_url = f"{self.base_url}/dp/{asin}"
+                logging.info(f"\nScraping product {idx}/{len(asins)}: {product_url}")
+                
+                try:
+                    product_data = self.scrape_product_details(product_url, category)
+                    product_data['asin'] = asin
+                    product_data['position'] = idx
+                    
+                    scraped_products.append(product_data)
+                    
+                    # Collect analysis if present
+                    if '_analysis' in product_data and product_data['_analysis'].get('success'):
+                        analyses.append(product_data['_analysis'])
+                    
+                    # Wait between requests
+                    if idx < len(asins):
+                        self.wait_between_requests()
+                        
+                except Exception as e:
+                    logging.error(f"Error scraping ASIN {asin}: {e}")
+                    log_data['errors'].append(f"ASIN {asin}: {str(e)}")
+                    self.stats['errors'] += 1
+            
+            log_data['products_scraped'] = len(scraped_products)
+            log_data['products_with_attributes'] = sum(
+                1 for p in scraped_products if p.get('attributes')
+            )
+            log_data['products'] = scraped_products
+            
+            # Step 3: Learn patterns if we have analyses
+            if analyses and category_name not in self.extraction_config:
+                logging.info(f"\nLearning patterns from {len(analyses)} products")
+                learned_patterns = self.pattern_learner.learn_patterns(analyses, category_name)
+                
+                if learned_patterns['patterns_found']:
+                    # Save learned patterns to config
+                    self.extraction_config[category_name] = learned_patterns
+                    self.save_config(self.extraction_config)
+                    log_data['patterns_learned'] = True
+                    log_data['learned_patterns'] = learned_patterns
+                    
+                    logging.info(f"✓ Learned {len(learned_patterns['rules'])} patterns for {category_name}")
+                else:
+                    logging.warning(f"No patterns learned for {category_name}")
+                    
+                    # Save HTML content for manual analysis
+                    for product in scraped_products:
+                        if '_html_snippet' in product:
+                            self.save_analyze_content(
+                                category_name,
+                                product['_html_snippet'],
+                                suffix=f"_{product.get('asin', 'unknown')}"
+                            )
+            
+            # Step 4: Save products
+            # Remove temporary analysis data before saving
+            for product in scraped_products:
+                product.pop('_analysis', None)
+                product.pop('_html_snippet', None)
+            
+            self.save_products(scraped_products)
+            
+            # Step 5: Save log
+            self.save_log(category_name, log_data)
+            
+            self.stats['categories_processed'] += 1
+            
+            logging.info(f"\n✓ Completed scraping {category_name}")
+            logging.info(f"  ASINs loaded: {log_data['asins_loaded']}")
+            logging.info(f"  Products scraped: {log_data['products_scraped']}")
+            logging.info(f"  Products with attributes: {log_data['products_with_attributes']}")
+            logging.info(f"  Patterns learned: {log_data['patterns_learned']}")
+        
+        except Exception as e:
+            logging.error(f"Error scraping products from ASINs for {category_name}: {e}")
+            log_data['errors'].append(str(e))
+            self.save_log(category_name, log_data)
+            self.stats['errors'] += 1
+        
+        return log_data
+    
+    def process_category(self, category: Dict[str, Any], max_products: int = 10, asin_dir: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Process a complete category by scraping from ASINs (backward compatibility wrapper)
+        
+        Args:
+            category: Category data from database
+            max_products: Maximum number of products to scrape
+            asin_dir: Optional directory where ASIN files are located
+            
+        Returns:
+            Processing results
+        """
+        return self.scrape_products_from_asins(category, max_products=max_products, asin_dir=asin_dir)
     
     def __del__(self):
         """Cleanup: close driver"""

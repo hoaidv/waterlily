@@ -25661,5 +25661,74 @@
         "confidence": 1.0
       }
     ]
+  },
+  "Men's Khakis": {
+    "category": "Men's Khakis",
+    "patterns_found": true,
+    "total_products_analyzed": 10,
+    "rules": [
+      {
+        "type": "div",
+        "priority": 2,
+        "xpath": "//div[contains(@class, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Fabric type"
+        ],
+        "frequency": 46,
+        "confidence": 4.6
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@id, 'detail')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Product details Item model number"
+        ],
+        "frequency": 11,
+        "confidence": 1.1
+      },
+      {
+        "type": "div",
+        "priority": 1,
+        "xpath": "//div[contains(@class, 'feature')]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Subtotal"
+        ],
+        "frequency": 10,
+        "confidence": 1.0
+      },
+      {
+        "type": "product_facts_list",
+        "priority": 2,
+        "xpath": "//div[@role=\"list\"]//div[contains(@class, \"product-facts-detail\")]",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Fabric type",
+          "Care instructions",
+          "Origin",
+          "Closure type"
+        ],
+        "frequency": 10,
+        "confidence": 1.0
+      },
+      {
+        "type": "detail_bullet_list",
+        "priority": 2,
+        "xpath": "//ul[contains(@class, 'detail-bullet-list')]//li",
+        "extraction_method": "key_value_pairs",
+        "sample_keys": [
+          "Item model number",
+          "Department",
+          "Date First Available",
+          "Manufacturer",
+          "ASIN"
+        ],
+        "frequency": 10,
+        "confidence": 1.0
+      }
+    ]
   }
 }

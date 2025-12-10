@@ -52,19 +52,6 @@ class BaseScraper(ABC):
         pass
     
     @abstractmethod
-    def search_products_by_category(self, category: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Search for products in a given category
-        
-        Args:
-            category: Category data from database
-            
-        Returns:
-            List of product data dictionaries
-        """
-        pass
-    
-    @abstractmethod
     def scrape_product_details(self, product_url: str, category: Dict[str, Any]) -> Dict[str, Any]:
         """
         Scrape details from a product page
