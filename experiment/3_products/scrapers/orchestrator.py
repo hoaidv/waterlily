@@ -24,7 +24,7 @@ from scrapers.selenium_scraper import SeleniumAmazonScraper
 class ScraperOrchestrator:
     """Orchestrates scraping across multiple categories and websites"""
     
-    def __init__(self, config_file: str = "../config/scraping_config.json", use_selenium: bool = False, asin_dir: Optional[str] = None):
+    def __init__(self, config_file: str = "../config/scraping_config.json", asin_dir: Optional[str] = None):
         """
         Initialize orchestrator
         
@@ -42,7 +42,7 @@ class ScraperOrchestrator:
         
         # Initialize scrapers
         self.scrapers = {}
-        self._initialize_scrapers(use_selenium=use_selenium)
+        self._initialize_scrapers()
         
         # Statistics
         self.stats = {
@@ -108,7 +108,7 @@ class ScraperOrchestrator:
         self.logger.info("AMAZON SCRAPER ORCHESTRATOR")
         self.logger.info("=" * 80)
     
-    def _initialize_scrapers(self, use_selenium: bool = False):
+    def _initialize_scrapers(self):
         """Initialize website scrapers"""
         output_dir = os.path.join(
             os.path.dirname(__file__),
@@ -119,18 +119,11 @@ class ScraperOrchestrator:
         
         for website in websites:
             if website.lower() == 'amazon':
-                if use_selenium:
-                    self.scrapers['amazon'] = SeleniumAmazonScraper(
-                        self.config,
-                        output_dir=output_dir
-                    )
-                    self.logger.info(f"✓ Initialized Selenium Amazon scraper")
-                else:
-                    self.scrapers['amazon'] = AmazonScraper(
-                        self.config,
-                        output_dir=output_dir
-                    )
-                    self.logger.info(f"✓ Initialized Amazon scraper")
+                self.scrapers['amazon'] = SeleniumAmazonScraper(
+                    self.config,
+                    output_dir=output_dir
+                )
+                self.logger.info(f"✓ Initialized Selenium Amazon scraper")
             # Add more scrapers here as needed
     
     def load_categories_from_db(self, category_names: Optional[List[str]] = None) -> List[Dict[str, Any]]:
@@ -207,7 +200,10 @@ class ScraperOrchestrator:
             self.logger.warning(f"Categories not found in database: {', '.join(missing)}")
         
         # Process each category with each scraper
-        max_products = self.config.get('products_per_category_per_website', 10)
+        if self.asin_dir:
+            max_products = None
+        else: 
+            max_products = self.config.get('products_per_category_per_website', 10)
         
         for category in categories:
             category_name = category['name']
@@ -709,8 +705,7 @@ def main():
     
     # Initialize orchestrator
     # Use Selenium for both ASIN scanning and product scraping (since AmazonScraper doesn't work)
-    use_selenium = args.scan_asin or args.scrape_products
-    orchestrator = ScraperOrchestrator(config_file=args.config, use_selenium=use_selenium, asin_dir=args.asin_dir)
+    orchestrator = ScraperOrchestrator(config_file=args.config, asin_dir=args.asin_dir)
     
     # Determine categories
     if args.scan_asin:
