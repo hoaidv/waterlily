@@ -9,6 +9,8 @@ experiment/3_products/output_07
 experiment/3_products/output_08
 experiment/3_products/output_09
 experiment/3_products/output_10
+
+.venv/
 .log
 .DS_Store
 .gradle

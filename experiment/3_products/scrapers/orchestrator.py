@@ -156,6 +156,43 @@ class ScraperOrchestrator:
             self.logger.error(f"Failed to load categories from database: {e}")
             return []
     
+    def _is_category_scraped(self, category_name: str, asin_count: int, output_dir: str) -> bool:
+        """
+        Check if a category's products are already scraped
+        
+        A category is considered scraped when:
+        - The products file exists
+        - The products file contains a list with count == asin_count
+        
+        Args:
+            category_name: Name of the category
+            asin_count: Number of ASINs for this category
+            output_dir: Output directory where products file should be
+            
+        Returns:
+            True if category is already scraped, False otherwise
+        """
+        safe_name = self._sanitize_filename(category_name)
+        products_file = os.path.join(output_dir, f"amazon_products_{safe_name}.json")
+        
+        if not os.path.exists(products_file):
+            return False
+        
+        try:
+            with open(products_file, 'r', encoding='utf-8') as f:
+                products = json.load(f)
+            
+            # Check if file contains a list with matching count
+            if isinstance(products, list) and len(products) == asin_count:
+                return True
+            
+            return False
+            
+        except (json.JSONDecodeError, IOError, TypeError) as e:
+            # If file is corrupted or can't be read, assume not scraped
+            self.logger.debug(f"Error checking products file for {category_name}: {e}")
+            return False
+    
     def _scrape_single_asin(self, asin: str, category: Dict[str, Any], scraper: SeleniumAmazonScraper, 
                             asin_index: int, total_asins: int) -> Dict[str, Any]:
         """
@@ -191,7 +228,7 @@ class ScraperOrchestrator:
                 self.stats['errors'] += 1
             return None
     
-    def run(self, category_names: Optional[List[str]] = None, num_workers: int = 1):
+    def scrape_products(self, category_names: Optional[List[str]] = None, num_workers: int = 1, force: bool = False):
         """
         Run scraping orchestrator
         
@@ -200,6 +237,7 @@ class ScraperOrchestrator:
                            If None or empty, loads ALL categories from database
                            Otherwise, uses target_categories from config if available
             num_workers: Number of parallel browser instances (default: 1, sequential)
+            force: If True, force scraping even if category is already scraped (overwrites old results)
         """
         self.stats['start_time'] = datetime.now()
         self.logger.info(f"Starting scraping run at {self.stats['start_time']}")
@@ -294,6 +332,17 @@ class ScraperOrchestrator:
                 asins = asins[:max_products]
                 if len(asins) < original_count:
                     self.logger.info(f"Limited ASINs: {original_count} -> {len(asins)}")
+            
+            # Check if category is already scraped (unless force=True)
+            if not force:
+                if self._is_category_scraped(category_name, len(asins), output_dir):
+                    self.logger.info(f"⏭️  Category {category_name} already scraped ({len(asins)} products) - skipping")
+                    self.logger.info(f"   (Use --categories to force re-scraping)")
+                    continue
+                else:
+                    self.logger.info(f"Category {category_name} not yet scraped or incomplete - proceeding")
+            else:
+                self.logger.info(f"🔄 Force mode: Re-scraping category {category_name} (will overwrite existing results)")
             
             self.logger.info(f"Loaded {len(asins)} ASINs for {category_name}")
             
@@ -899,12 +948,15 @@ def main():
         num_workers = max(1, args.workers)  # Ensure at least 1 worker
         
         if args.categories:
+            # Categories explicitly provided - force scraping (overwrite old results)
             print(f"\n🛒 Running PRODUCT SCRAPING MODE with categories: {', '.join(args.categories)}")
-            orchestrator.run(category_names=args.categories, num_workers=num_workers)
+            print(f"   (Force mode: will overwrite existing results)")
+            orchestrator.scrape_products(category_names=args.categories, num_workers=num_workers, force=True)
         else:
-            # No categories provided - scrape ALL categories from database
+            # No categories provided - scrape ALL categories from database (skip already scraped)
             print(f"\n🛒 Running PRODUCT SCRAPING MODE - will scrape ALL categories from database")
-            orchestrator.run(category_names=None, num_workers=num_workers)
+            print(f"   (Will skip categories that are already scraped)")
+            orchestrator.scrape_products(category_names=None, num_workers=num_workers, force=False)
     else:
         raise NotImplementedError('Please specify a mode to run')
 

@@ -130,7 +130,7 @@ class SeleniumAmazonScraper(AmazonScraper):
             
             # Wait for page to load (shorter timeout for speed)
             try:
-                WebDriverWait(self.driver, 5).until(
+                WebDriverWait(self.driver, 15).until(
                     lambda d: d.execute_script('return document.readyState') == 'complete'
                 )
             except TimeoutException:
