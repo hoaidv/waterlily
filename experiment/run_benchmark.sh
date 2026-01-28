@@ -16,6 +16,10 @@ THREADS=12
 # Duration for each test
 DURATION="30s"
 
+# Request timeout (before considering a request has failed)
+TIMEOUT="10s"
+TIMEOUT_SEC=10
+
 # CCU levels to test
 CCUS=(100 200 500 1000 2000 5000 10000 20000 50000 100000)
 
@@ -41,6 +45,7 @@ echo ""
 echo -e "Base URL: ${YELLOW}$BASE_URL${NC}"
 echo -e "Timestamp: ${YELLOW}$TIMESTAMP${NC}"
 echo -e "Duration per test: ${YELLOW}$DURATION${NC}"
+echo -e "Timeout per request: ${YELLOW}$TIMEOUT${NC}"
 echo -e "Threads: ${YELLOW}$THREADS${NC}"
 echo ""
 
@@ -79,17 +84,18 @@ run_benchmark() {
     
     echo -e "${YELLOW}----------------------------------------${NC}"
     if [ "$api_type" == "batch" ]; then
-        echo -e "Running: API=${GREEN}$api_type${NC}, CCU=${GREEN}$ccu${NC}, BatchSize=${GREEN}$batch_size${NC}"
+        echo -e "Running: API=${GREEN}$api_type${NC}, CCU=${GREEN}$ccu${NC}, BatchSize=${GREEN}$batch_size${NC}, Timeout=${GREEN}$TIMEOUT${NC}"
     else
-        echo -e "Running: API=${GREEN}$api_type${NC}, CCU=${GREEN}$ccu${NC}"
+        echo -e "Running: API=${GREEN}$api_type${NC}, CCU=${GREEN}$ccu${NC}, Timeout=${GREEN}$TIMEOUT${NC}"
     fi
     echo -e "${YELLOW}----------------------------------------${NC}"
     
     # Run wrk benchmark
+    # Arguments passed after "--" to lua script: <api_type> <batch_size> <ccu> <timeout>
     if [ "$api_type" == "batch" ]; then
-        wrk -t$THREADS -c$ccu -d$DURATION -s "$BENCHMARK_SCRIPT" "$BASE_URL" -- "$api_type" "$batch_size"
+        wrk -t$THREADS -c$ccu -d$DURATION --timeout $TIMEOUT -s "$BENCHMARK_SCRIPT" "$BASE_URL" -- "$api_type" "$batch_size" "$ccu" "$TIMEOUT_SEC"
     else
-        wrk -t$THREADS -c$ccu -d$DURATION -s "$BENCHMARK_SCRIPT" "$BASE_URL" -- "$api_type"
+        wrk -t$THREADS -c$ccu -d$DURATION --timeout $TIMEOUT -s "$BENCHMARK_SCRIPT" "$BASE_URL" -- "$api_type" "10" "$ccu" "$TIMEOUT_SEC"
     fi
     
     echo ""
@@ -106,11 +112,13 @@ show_usage() {
     echo "  -b, --batch         Run batch API benchmarks only"
     echo "  -c, --ccu <value>   Run with specific CCU only"
     echo "  -d, --duration <s>  Set duration (default: 30s)"
+    echo "  -t, --timeout <s>   Set request timeout (default: 10s)"
     echo ""
     echo "Examples:"
     echo "  $0                  # Full benchmark suite"
     echo "  $0 -q               # Quick benchmark"
     echo "  $0 -s -c 1000       # Single API with 1000 CCU"
+    echo "  $0 -t 30s           # With 30 second timeout"
 }
 
 # Parse command line arguments
@@ -145,6 +153,12 @@ while [[ $# -gt 0 ]]; do
             ;;
         -d|--duration)
             DURATION="$2"
+            shift 2
+            ;;
+        -t|--timeout)
+            TIMEOUT="$2"
+            # Extract numeric value for passing to lua script
+            TIMEOUT_SEC=$(echo "$2" | sed 's/[^0-9]//g')
             shift 2
             ;;
         *)

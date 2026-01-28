@@ -1,12 +1,16 @@
 -- Wrk Lua script for benchmarking the Waterlily product service
--- Usage: wrk -t12 -c400 -d30s -s benchmark.lua http://localhost:8080 -- <api_type> <batch_size>
+-- Usage: wrk -t12 -c400 -d30s --timeout 10s -s benchmark.lua http://localhost:8080 -- <api_type> <batch_size> <ccu> <timeout>
 -- api_type: "single" or "batch"
 -- batch_size: number of IDs per batch request (only for batch API)
+-- ccu: number of concurrent connections (passed explicitly since wrk.connections is not available in done hook)
+-- timeout: request timeout in seconds
 
 -- Configuration
 local product_ids = {}
 local api_type = "single"  -- "single" or "batch"
 local batch_size = 10      -- Number of IDs per batch request
+local ccu = 0              -- Concurrent connections (passed via args)
+local timeout_sec = 10     -- Request timeout in seconds
 local current_index = 0
 local start_time = nil
 
@@ -48,6 +52,7 @@ end
 -- Parse command line arguments
 function parse_args()
     -- wrk passes extra arguments after "--"
+    -- Expected format: <api_type> <batch_size> <ccu> <timeout>
     if wrk.args then
         if wrk.args[1] then
             api_type = wrk.args[1]
@@ -55,9 +60,17 @@ function parse_args()
         if wrk.args[2] then
             batch_size = tonumber(wrk.args[2]) or 10
         end
+        if wrk.args[3] then
+            ccu = tonumber(wrk.args[3]) or 0
+        end
+        if wrk.args[4] then
+            timeout_sec = tonumber(wrk.args[4]) or 10
+        end
     end
     print("API type: " .. api_type)
     print("Batch size: " .. batch_size)
+    print("CCU: " .. ccu)
+    print("Timeout: " .. timeout_sec .. "s")
 end
 
 -- Setup function called once per thread
@@ -160,6 +173,8 @@ function done(summary, latency, requests)
     if api_type == "batch" then
         io.write(string.format("Batch Size: %d\n", batch_size))
     end
+    io.write(string.format("CCU: %d\n", ccu))
+    io.write(string.format("Timeout: %ds\n", timeout_sec))
     io.write(string.format("Total Requests: %d\n", summary.requests))
     io.write(string.format("Duration: %.2f seconds\n", duration_sec))
     io.write(string.format("Requests/sec: %.2f\n", rps))
@@ -196,9 +211,6 @@ function done(summary, latency, requests)
     -- Create benchmarks directory (using os.execute)
     os.execute("mkdir -p " .. benchmarks_dir)
     
-    -- Determine CCU from connections (approximate - wrk doesn't expose this directly)
-    local ccu = wrk.connections or "unknown"
-    
     local json_filename = benchmarks_dir .. timestamp .. "_benchmark_result.json"
     local json_file = io.open(json_filename, "a")
     
@@ -218,7 +230,8 @@ function done(summary, latency, requests)
   "benchmark": {
     "api_type": "%s",
     "batch_size": %s,
-    "ccu": "%s",
+    "ccu": %d,
+    "timeout_seconds": %d,
     "duration_seconds": %.2f
   },
   "results": {
@@ -248,7 +261,8 @@ function done(summary, latency, requests)
             benchmark_context.access_pattern.processing_complexity,
             api_type,
             api_type == "batch" and tostring(batch_size) or "null",
-            tostring(ccu),
+            ccu,
+            timeout_sec,
             duration_sec,
             summary.requests,
             rps,
