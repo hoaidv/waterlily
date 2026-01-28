@@ -23,12 +23,12 @@ For each chosen "benchmark context", the benchmark script measures API performan
 
 ---
 
-## Benchmark Aspects
+## `Benchmark Aspect`s
 
 Definitions
 
-- A benchmark aspect is a combination of API x CCU.
-- A benchmark run may execute the benchmark on multiple aspects (e.g. fix API, but vary CCU).
+- A `benchmark aspect` is a combination of API x CCU.
+- A `benchmark run` may execute the benchmark on multiple aspects (e.g. fix API, but vary CCU).
 
 ### APIs Under Test
 
@@ -99,10 +99,10 @@ Format: One product ID per line
 
 ---
 
-## Bechmark Aspect Output
+## `Bechmark Aspect` Output
 
-One benchmark aspect result is saved to one output file, not sharing 
-with other benchmark aspects, not sharing with benchmark run stdout, stderr.
+One `benchmark aspect` result is saved to one output file, not sharing 
+with other `benchmark aspect`s, not sharing with `benchmark run` stdout, stderr.
 
 ```
 experiment/benchmarks/result_<timestamp>_<api>_<ccu>.json
@@ -157,9 +157,9 @@ experiment/benchmarks/result_<timestamp>_<api>_<ccu>.json
 }
 ```
 
-## Benchmark Run Output
+## `Benchmark Run` Output
 
-One benchmark run may results in many benchmark aspect output files.
+One `benchmark run` may results in many `benchmark aspect` output files.
 But all its stdout, stderr are saved into one file.
 
 ```
