@@ -25,6 +25,11 @@ For each chosen "benchmark context", the benchmark script measures API performan
 
 ## Benchmark Aspects
 
+Definitions
+
+- A benchmark aspect is a combination of API x CCU.
+- A benchmark run may execute the benchmark on multiple aspects (e.g. fix API, but vary CCU).
+
 ### APIs Under Test
 
 | API | Endpoint | Method | Reference |
@@ -53,14 +58,14 @@ As defined in [NFR-003](nfr.md#nfr-003-concurrency-support):
 
 ## Benchmark Matrix
 
-Each benchmark run tests one combination:
+Possible combinations from APIs x CCU Levels.
 
 | API | CCU Levels |
 |-----|------------|
 | Single Product | 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000 |
 | Batch Products | 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000 |
 
-**Total runs:** 8 (2 APIs x 10 CCU levels)
+**Total runs:** 20 (2 APIs x 10 CCU levels)
 
 ---
 
@@ -94,7 +99,14 @@ Format: One product ID per line
 
 ---
 
-## Output Format
+## Bechmark Aspect Output
+
+One benchmark aspect result is saved to one output file, not sharing 
+with other benchmark aspects, not sharing with benchmark run stdout, stderr.
+
+```
+experiment/benchmarks/result_<timestamp>_<api>_<ccu>.json
+```
 
 ### JSON Result Structure
 
@@ -145,10 +157,13 @@ Format: One product ID per line
 }
 ```
 
-### Output File Location
+## Benchmark Run Output
+
+One benchmark run may results in many benchmark aspect output files.
+But all its stdout, stderr are saved into one file.
 
 ```
-experiment/benchmarks/result_<timestamp>_<api>_<ccu>.json
+experiment/benchmarks/result_<timestamp>__stdout_stderr.log
 ```
 
 ---
