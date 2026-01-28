@@ -34,6 +34,11 @@ This document defines the technical constraints, assumptions, and dependencies f
 
 ### Environment
 
+The database is already available. We should scan the database to see if the actual 
+database schema matches with this specification.
+
+Database connection is provided in [mysql-config.json](/experiment/mysql-config.json)
+
 | Constraint | Value | Rationale |
 |------------|-------|-----------|
 | Platform | localhost | Single machine benchmark eliminates network variables |
