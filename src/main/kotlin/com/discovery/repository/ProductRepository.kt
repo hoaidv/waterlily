@@ -216,13 +216,13 @@ class ProductRepository {
             baseSku = getString("base_sku"),
             name = getString("name"),
             description = getString("description"),
-            features = getString("features")?.let { parseJsonArray(it) },
+            features = getString("features"),
             status = getString("status"),
             source = getString("source"),
             sourceSku = getString("source_sku"),
             sourceUrl = getString("source_url"),
             categoryId = getLong("category_id"),
-            attributes = getString("attributes")?.let { parseJsonObject(it) }
+            attributes = getString("attributes")
         )
     }
     
@@ -242,7 +242,7 @@ class ProductRepository {
             quantity = getInt("quantity"),
             price = getBigDecimal("price") ?: BigDecimal.ZERO,
             currency = getString("currency") ?: "USD",
-            attributes = getString("attributes")?.let { parseJsonObject(it) }
+            attributes = getString("attributes")
         )
     }
     
@@ -257,19 +257,4 @@ class ProductRepository {
         )
     }
     
-    private fun parseJsonArray(jsonString: String): JsonArray? {
-        return try {
-            json.decodeFromString<JsonArray>(jsonString)
-        } catch (e: Exception) {
-            null
-        }
-    }
-    
-    private fun parseJsonObject(jsonString: String): JsonObject? {
-        return try {
-            json.decodeFromString<JsonObject>(jsonString)
-        } catch (e: Exception) {
-            null
-        }
-    }
 }

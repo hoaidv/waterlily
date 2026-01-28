@@ -12,13 +12,13 @@ data class Product(
     val baseSku: String,
     val name: String,
     val description: String?,
-    val features: JsonArray?,
+    val features: String?,
     val status: String,
     val source: String,
     val sourceSku: String?,
     val sourceUrl: String?,
     val categoryId: Long,
-    val attributes: JsonObject?
+    val attributes: String?
 )
 
 /**
@@ -30,12 +30,12 @@ data class ProductDetail(
     val baseSku: String,
     val name: String,
     val description: String?,
-    val features: JsonArray?,
+    val features: String?,
     val status: String,
     val source: String,
     val sourceSku: String?,
     val sourceUrl: String?,
-    val attributes: JsonObject?,
+    val attributes: String?,
     val category: CategoryDetail,
     val variants: List<VariantDetail>,
     val media: List<MediaDetail>

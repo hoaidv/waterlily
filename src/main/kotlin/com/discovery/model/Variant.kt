@@ -13,7 +13,7 @@ data class ProductVariant(
     val quantity: Int,
     val price: java.math.BigDecimal,
     val currency: String,
-    val attributes: JsonObject?
+    val attributes: String?
 )
 
 /**
@@ -26,7 +26,7 @@ data class VariantDetail(
     val quantity: Int,
     val price: Double,
     val currency: String,
-    val attributes: JsonObject?
+    val attributes: String?
 )
 
 fun ProductVariant.toDetail() = VariantDetail(
