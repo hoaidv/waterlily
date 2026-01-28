@@ -148,7 +148,7 @@ Format: One product ID per line
 ### Output File Location
 
 ```
-experiment/benchmarks/benchmark_<timestamp>.json
+experiment/benchmarks/result_<timestamp>_<api>_<ccu>.json
 ```
 
 ---
@@ -219,12 +219,25 @@ wrk -t12 -c1000 -d60s --timeout 30s -s benchmark.lua http://localhost:8080 -- in
 ./experiment/run_benchmark.sh --api single --ccu 1000 --duration 30 --timeout 30
 ```
 
-Important fixes:
+#### Arguments
+
+| Flag  | Required | Description |
+|------ | -------| -------------|
+| --api | Required | Type of API to benchmark |
+| --ccu | Optional | CCU level to benchmark. Default to all concurrency levels. |
+| --duration | Optional | CCU level to benchmark. Default to `30s` (30 seconds). |
+| --timeout | Optional | CCU level to benchmark. Default to `2s` (2 seconds). |
+
+#### Important fixes
+
 - Number of connection (CCU) is unavailable at `wrk`'s `done` handler, 
   we have to pass it to `wrk`'s `init` handler by appending at the end of the
   `wrk` invocation (`wrk ... -- init_arg1 init_arg2 init_arg3`)
 - If user omits the `--ccu` flag, the script will loop through all concurrency levels 
-  as described above.
+  as described in section `Concurrency Levels` above.
+  
+Thus, a single benchmark script run may produce multiple benchmark 
+output files of different CCUs.
 
 ---
 
