@@ -68,8 +68,14 @@ Each benchmark run tests one combination:
 
 ### Product IDs Extractor
 
-Need to write an extractor to extract product IDs from MySQL to `experiment/product_ids.txt`.
-Number of product IDs to extract: 1,000,000 unique IDs.
+Need to write an `extract_product_ids` to extract product IDs from MySQL to `experiment/product_ids.txt`.
+* Unique IDs to extract 1,000,000
+* Writen using Kotlin and bash
+  - Kotlin for actual extractor logic
+  - `./gradlew` to invoke the script
+* Arguments as properties
+  - `-PproductCount`
+  - `-PresultFile`
 
 ### Product IDs File
 
@@ -104,40 +110,38 @@ Format: One product ID per line
       "complexity": "MEDIUM"
     }
   },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 1000
+  },
   "timestamp": "2026-01-28T10:30:00Z",
   "duration_seconds": 60,
-  "results": [
-    {
-      "api": "single_product",
-      "endpoint": "GET /api/v1/products/{id}",
-      "ccu": 1000,
-      "metrics": {
-        "requests_total": 1250000,
-        "rps": 20833,
-        "latency": {
-          "min_ms": 0.5,
-          "avg_ms": 48.2,
-          "max_ms": 512.0,
-          "stdev_ms": 15.3,
-          "p50_ms": 45.0,
-          "p95_ms": 82.0,
-          "p99_ms": 120.0
-        },
-        "transfer": {
-          "total_mb": 6250,
-          "rate_mbps": 104.2
-        },
-        "errors": {
-          "socket.connect": 0,
-          "socket.read": 0,
-          "socket.write": 0,
-          "socket.timeout": 0,
-          "4xx": 0,
-          "5xx": 0
-        }
-      }
+  "metrics": {
+    "requests_total": 1250000,
+    "rps": 20833,
+    "latency": {
+      "min_ms": 0.5,
+      "avg_ms": 48.2,
+      "max_ms": 512.0,
+      "stdev_ms": 15.3,
+      "p50_ms": 45.0,
+      "p95_ms": 82.0,
+      "p99_ms": 120.0
+    },
+    "transfer": {
+      "total_mb": 6250,
+      "rate_mbps": 104.2
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 0,
+      "socket.write": 0,
+      "socket.timeout": 0,
+      "4xx": 0,
+      "5xx": 0
     }
-  ]
+  }
 }
 ```
 
@@ -219,6 +223,8 @@ Important fixes:
 - Number of connection (CCU) is unavailable at `wrk`'s `done` handler, 
   we have to pass it to `wrk`'s `init` handler by appending at the end of the
   `wrk` invocation (`wrk ... -- init_arg1 init_arg2 init_arg3`)
+- If user omits the `--ccu` flag, the script will loop through all concurrency levels 
+  as described above.
 
 ---
 

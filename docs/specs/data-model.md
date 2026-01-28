@@ -196,7 +196,7 @@ Given the read-heavy workload (35M products, up to 100k RPS), the following inde
 ```sql
 INSERT INTO products (id, base_sku, name, description, features, status, source, source_sku, source_url, category_id, attributes)
 VALUES (
-  '550e8400-e29b-41d4-a716-446655440000',
+  446655440000,
   'WL-ELEC-001',
   'Wireless Bluetooth Headphones',
   'High-quality wireless headphones with noise cancellation',
@@ -205,7 +205,7 @@ VALUES (
   'AMZ',
   'B08N5WRWNW',
   'https://amazon.com/dp/B08N5WRWNW',
-  'cat-electronics-001',
+  100100,
   '{"brand": "AudioTech", "weight": "250g", "connectivity": "Bluetooth"}'
 );
 ```

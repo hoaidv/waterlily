@@ -36,7 +36,7 @@ GET /api/v1/products/{id}
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "id": 446655440000,
   "baseSku": "WL-PROD-001",
   "name": "Example Product",
   "description": "Product description text",
@@ -84,7 +84,7 @@ GET /api/v1/products/{id}
 {
   "error": "NOT_FOUND",
   "message": "Product not found",
-  "productId": "550e8400-e29b-41d4-a716-446655440000"
+  "productId": 446655440000
 }
 ```
 
@@ -121,8 +121,8 @@ POST /api/v1/products/batch
 ```json
 {
   "ids": [
-    "550e8400-e29b-41d4-a716-446655440000",
-    "550e8400-e29b-41d4-a716-446655440001"
+    446655440000,
+    446655440001
   ]
 }
 ```
@@ -139,7 +139,7 @@ POST /api/v1/products/batch
 {
   "products": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "id": 446655440000,
       "baseSku": "WL-PROD-001",
       "name": "Example Product 1",
       "description": "...",
@@ -148,7 +148,7 @@ POST /api/v1/products/batch
       "media": [ "..." ]
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "id": 446655440001,
       "baseSku": "WL-PROD-002",
       "name": "Example Product 2",
       "description": "...",
