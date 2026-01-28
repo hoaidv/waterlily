@@ -4,3 +4,15 @@ ktor:
             - com.discovery.ApplicationKt.module
     deployment:
         port: 8080
+
+database:
+    jdbcUrl: "jdbc:mysql://localhost:3306/ecommerce?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+    username: "hoaidv"
+    password: "pipipipi"
+    # Tuned for high throughput
+    maximumPoolSize: 50
+    minimumIdle: 10
+    connectionTimeout: 30000
+    idleTimeout: 600000
+    maxLifetime: 1800000
