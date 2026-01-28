@@ -9,6 +9,7 @@ database:
     jdbcUrl: "jdbc:mysql://localhost:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
     username: "hoaidv"
     password: "pipipipi"
+    # Tuned for high throughput (matching expr000)
     maximumPoolSize: 50
     minimumIdle: 10
     connectionTimeout: 30000

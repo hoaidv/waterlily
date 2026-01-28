@@ -3,8 +3,9 @@ package com.discovery.model
 import kotlinx.serialization.Serializable
 
 /**
- * Database entity for product_media table
+ * ProductMedia entity - used for both DB mapping and API response
  */
+@Serializable
 data class ProductMedia(
     val id: Long,
     val productId: Long,
@@ -12,24 +13,4 @@ data class ProductMedia(
     val type: String,
     val resolution: String,
     val url: String
-)
-
-/**
- * API response DTO for media details
- */
-@Serializable
-data class MediaDetail(
-    val id: Long,
-    val type: String,
-    val resolution: String,
-    val url: String,
-    val variantId: Long?
-)
-
-fun ProductMedia.toDetail() = MediaDetail(
-    id = id,
-    type = type,
-    resolution = resolution,
-    url = url,
-    variantId = variantId
 )

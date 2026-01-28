@@ -1,12 +1,11 @@
 package com.discovery.model
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 
 /**
- * Database entity for products table
+ * Product entity - used for both DB mapping and API response
  */
+@Serializable
 data class Product(
     val id: Long,
     val baseSku: String,
@@ -14,15 +13,15 @@ data class Product(
     val description: String?,
     val features: String?,
     val status: String,
-    val source: String,
+    val source: String?,
     val sourceSku: String?,
     val sourceUrl: String?,
-    val categoryId: Long,
+    val categoryId: Long?,
     val attributes: String?
 )
 
 /**
- * API response DTO for complete product details including category, variants, and media
+ * Complete product detail with related entities - API response format
  */
 @Serializable
 data class ProductDetail(
@@ -32,14 +31,39 @@ data class ProductDetail(
     val description: String?,
     val features: String?,
     val status: String,
-    val source: String,
+    val source: String?,
     val sourceSku: String?,
     val sourceUrl: String?,
     val attributes: String?,
-    val category: CategoryDetail,
-    val variants: List<VariantDetail>,
-    val media: List<MediaDetail>
-)
+    val category: Category?,
+    val variants: List<ProductVariant>,
+    val media: List<ProductMedia>
+) {
+    companion object {
+        fun fromProduct(
+            product: Product,
+            category: Category?,
+            variants: List<ProductVariant>,
+            media: List<ProductMedia>
+        ): ProductDetail {
+            return ProductDetail(
+                id = product.id,
+                baseSku = product.baseSku,
+                name = product.name,
+                description = product.description,
+                features = product.features,
+                status = product.status,
+                source = product.source,
+                sourceSku = product.sourceSku,
+                sourceUrl = product.sourceUrl,
+                attributes = product.attributes,
+                category = category,
+                variants = variants,
+                media = media
+            )
+        }
+    }
+}
 
 /**
  * API response DTO for batch product retrieval
