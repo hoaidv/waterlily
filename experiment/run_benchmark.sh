@@ -9,7 +9,7 @@ set -e
 API=""
 CCU=""
 DURATION=30
-TIMEOUT=2
+TIMEOUT=10
 BASE_URL="http://localhost:8080"
 THREADS=12
 
