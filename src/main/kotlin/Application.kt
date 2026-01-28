@@ -31,7 +31,7 @@ fun Application.module() {
     }
 
     // Shutdown hook
-    environment.monitor.subscribe(ApplicationStopped) {
+    monitor.subscribe(ApplicationStopped) {
         DatabaseConfig.close()
     }
 }

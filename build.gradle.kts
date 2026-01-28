@@ -33,9 +33,15 @@ dependencies {
 }
 
 // Task to extract product IDs for benchmarking
+// Usage: ./gradlew extractProductIds -PproductCount=1000000 -PresultFile=experiment/product_ids.txt
 tasks.register<JavaExec>("extractProductIds") {
     group = "benchmark"
     description = "Extract random product IDs from database for benchmark testing"
     mainClass.set("com.discovery.tools.ExtractProductIds")
     classpath = sourceSets["main"].runtimeClasspath
+    
+    // Pass Gradle properties as command-line arguments
+    val productCount = project.findProperty("productCount")?.toString() ?: "1000000"
+    val resultFile = project.findProperty("resultFile")?.toString() ?: "experiment/product_ids.txt"
+    args = listOf(productCount, resultFile)
 }
