@@ -1,25 +1,39 @@
 package com.discovery.repository
 
 import com.discovery.config.DatabaseConfig
+import com.discovery.config.DatabaseDispatcher
 import com.discovery.model.*
+import kotlinx.coroutines.withContext
 import java.sql.ResultSet
 
 class ProductRepository {
 
-    fun findById(id: Long): ProductDetail? {
-        val product = findProductById(id) ?: return null
+    /**
+     * Find a product by ID with all related details.
+     * 
+     * This is a suspend function that offloads blocking JDBC operations
+     * to the DatabaseDispatcher, keeping Netty worker threads free.
+     */
+    suspend fun findById(id: Long): ProductDetail? = withContext(DatabaseDispatcher.get()) {
+        val product = findProductById(id) ?: return@withContext null
         val category = product.categoryId?.let { findCategoryById(it) }
         val variants = findVariantsByProductId(id)
         val media = findMediaByProductId(id)
         
-        return ProductDetail.fromProduct(product, category, variants, media)
+        ProductDetail.fromProduct(product, category, variants, media)
     }
 
-    fun findByIds(ids: List<Long>): List<ProductDetail> {
-        if (ids.isEmpty()) return emptyList()
+    /**
+     * Find multiple products by IDs with all related details.
+     * 
+     * This is a suspend function that offloads blocking JDBC operations
+     * to the DatabaseDispatcher, keeping Netty worker threads free.
+     */
+    suspend fun findByIds(ids: List<Long>): List<ProductDetail> = withContext(DatabaseDispatcher.get()) {
+        if (ids.isEmpty()) return@withContext emptyList()
         
         val products = findProductsByIds(ids)
-        if (products.isEmpty()) return emptyList()
+        if (products.isEmpty()) return@withContext emptyList()
         
         val productIds = products.map { it.id }
         val categoryIds = products.mapNotNull { it.categoryId }.distinct()
@@ -33,7 +47,7 @@ class ProductRepository {
         val variantsByProductId = findVariantsByProductIds(productIds).groupBy { it.productId }
         val mediaByProductId = findMediaByProductIds(productIds).groupBy { it.productId }
         
-        return products.map { product ->
+        products.map { product ->
             ProductDetail.fromProduct(
                 product = product,
                 category = product.categoryId?.let { categories[it] },

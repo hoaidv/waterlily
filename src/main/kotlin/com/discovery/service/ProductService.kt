@@ -9,15 +9,21 @@ class ProductService(
     
     /**
      * Get a single product by ID with all related details.
+     * 
+     * This is a suspend function - it will not block the calling thread.
+     * The actual database work happens on the DatabaseDispatcher.
      */
-    fun getProductById(id: Long): ProductDetail? {
+    suspend fun getProductById(id: Long): ProductDetail? {
         return repository.findById(id)
     }
 
     /**
      * Get multiple products by their IDs with all related details.
+     * 
+     * This is a suspend function - it will not block the calling thread.
+     * The actual database work happens on the DatabaseDispatcher.
      */
-    fun getProductsByIds(ids: List<Long>): List<ProductDetail> {
+    suspend fun getProductsByIds(ids: List<Long>): List<ProductDetail> {
         if (ids.isEmpty()) return emptyList()
         return repository.findByIds(ids)
     }

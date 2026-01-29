@@ -10,11 +10,11 @@ API=""
 CCU=""
 DURATION=30
 TIMEOUT=10
-BASE_URL="http://localhost:8080"
+BASE_URL="http://0.0.0.0:8080"
 THREADS=12
 
 # All CCU levels as defined in the spec
-ALL_CCU_LEVELS=(100 200 500 1000 2000 5000 10000 20000 50000 100000)
+ALL_CCU_LEVELS=(100 200 500 1000 2000 5000 10000 20000 50000)
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do

@@ -4,14 +4,29 @@ ktor:
             - com.discovery.ApplicationKt.module
     deployment:
         port: 8080
+        # Netty threading configuration
+        connectionGroupSize: 14
+        workerGroupSize: 28
+        callGroupSize: 32
+        shutdownGracePeriod: 2000
+        shutdownTimeout: 3000
 
 database:
     jdbcUrl: "jdbc:mysql://localhost:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
     username: "hoaidv"
     password: "pipipipi"
-    # Tuned for high throughput (matching expr000)
-    maximumPoolSize: 50
+    # Tuned for high throughput
+    maximumPoolSize: 28
     minimumIdle: 10
     connectionTimeout: 30000
     idleTimeout: 600000
     maxLifetime: 1800000
+
+# Netty thread blocking monitor
+monitor:
+    blocking:
+        enabled: false
+        checkIntervalMs: 100       # How often to check thread states
+        warningThresholdMs: 50     # Log warning if blocked > 50ms
+        criticalThresholdMs: 200   # Log critical error if blocked > 200ms
+        stackTraceOnWarning: true  # Include stack trace in warnings
