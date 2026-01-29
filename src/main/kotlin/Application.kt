@@ -1,7 +1,6 @@
 package com.discovery
 
-import com.discovery.config.DatabaseConfig
-import com.discovery.config.DatabaseDispatcher
+import com.discovery.config.R2dbcConfig
 import com.discovery.plugins.BlockingMonitorPlugin
 import com.discovery.plugins.configureSerialization
 import com.discovery.plugins.configureStatusPages
@@ -17,13 +16,8 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    // Initialize database connection pool
-    DatabaseConfig.init(environment)
-    
-    // Initialize database dispatcher with thread pool matching HikariCP pool size
-    // This ensures we never have more threads waiting than connections available
-    val dbPoolSize = environment.config.propertyOrNull("database.maximumPoolSize")?.getString()?.toInt() ?: 50
-    DatabaseDispatcher.init(dbPoolSize)
+    // Initialize R2DBC connection pool (non-blocking reactive database)
+    R2dbcConfig.init(environment)
 
     // Configure plugins
     configureSerialization()
@@ -50,7 +44,6 @@ fun Application.module() {
 
     // Shutdown hook
     monitor.subscribe(ApplicationStopped) {
-        DatabaseDispatcher.shutdown()
-        DatabaseConfig.close()
+        R2dbcConfig.close()
     }
 }

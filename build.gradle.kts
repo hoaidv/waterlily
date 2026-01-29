@@ -20,7 +20,12 @@ dependencies {
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.serialization.kotlinx.json)
 
-    // Database
+    // Database - R2DBC (non-blocking reactive)
+    implementation(libs.r2dbc.mysql)
+    implementation(libs.r2dbc.pool)
+    implementation(libs.coroutines.reactor)
+    
+    // Database - JDBC (kept for tooling like ExtractProductIds)
     implementation(libs.hikaricp)
     implementation(libs.mysql.connector)
 

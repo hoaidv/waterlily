@@ -1,291 +1,320 @@
 package com.discovery.repository
 
-import com.discovery.config.DatabaseConfig
-import com.discovery.config.DatabaseDispatcher
+import com.discovery.config.R2dbcConfig
 import com.discovery.model.*
-import kotlinx.coroutines.withContext
-import java.sql.ResultSet
+import io.r2dbc.spi.Row
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import reactor.core.publisher.Flux
 
+/**
+ * Product repository using R2DBC for true non-blocking database access.
+ * 
+ * R2DBC (Reactive Relational Database Connectivity) provides:
+ * - Non-blocking I/O: No thread blocking while waiting for DB responses
+ * - Backpressure: Handles flow control between app and database
+ * - Coroutine integration: Via kotlinx-coroutines-reactor
+ * 
+ * This allows handling thousands of concurrent requests without
+ * blocking any threads, including Netty event loop threads.
+ */
 class ProductRepository {
+
+    private val pool get() = R2dbcConfig.getConnectionPool()
 
     /**
      * Find a product by ID with all related details.
-     * 
-     * This is a suspend function that offloads blocking JDBC operations
-     * to the DatabaseDispatcher, keeping Netty worker threads free.
+     * Fully non-blocking - no threads are blocked during execution.
      */
-    suspend fun findById(id: Long): ProductDetail? = withContext(DatabaseDispatcher.get()) {
-        val product = findProductById(id) ?: return@withContext null
-        val category = product.categoryId?.let { findCategoryById(it) }
-        val variants = findVariantsByProductId(id)
-        val media = findMediaByProductId(id)
+    suspend fun findById(id: Long): ProductDetail? {
+        val product = findProductById(id) ?: return null
         
-        ProductDetail.fromProduct(product, category, variants, media)
-    }
-
-    /**
-     * Find multiple products by IDs with all related details.
-     * 
-     * This is a suspend function that offloads blocking JDBC operations
-     * to the DatabaseDispatcher, keeping Netty worker threads free.
-     */
-    suspend fun findByIds(ids: List<Long>): List<ProductDetail> = withContext(DatabaseDispatcher.get()) {
-        if (ids.isEmpty()) return@withContext emptyList()
-        
-        val products = findProductsByIds(ids)
-        if (products.isEmpty()) return@withContext emptyList()
-        
-        val productIds = products.map { it.id }
-        val categoryIds = products.mapNotNull { it.categoryId }.distinct()
-        
-        val categories = if (categoryIds.isNotEmpty()) {
-            findCategoriesByIds(categoryIds).associateBy { it.id }
-        } else {
-            emptyMap()
-        }
-        
-        val variantsByProductId = findVariantsByProductIds(productIds).groupBy { it.productId }
-        val mediaByProductId = findMediaByProductIds(productIds).groupBy { it.productId }
-        
-        products.map { product ->
+        // Fetch related data concurrently (all non-blocking)
+        return coroutineScope {
+            val categoryDeferred = async { 
+                product.categoryId?.let { findCategoryById(it) } 
+            }
+            val variantsDeferred = async { findVariantsByProductId(id) }
+            val mediaDeferred = async { findMediaByProductId(id) }
+            
             ProductDetail.fromProduct(
                 product = product,
-                category = product.categoryId?.let { categories[it] },
-                variants = variantsByProductId[product.id] ?: emptyList(),
-                media = mediaByProductId[product.id] ?: emptyList()
+                category = categoryDeferred.await(),
+                variants = variantsDeferred.await(),
+                media = mediaDeferred.await()
             )
         }
     }
 
-    private fun findProductById(id: Long): Product? {
+    /**
+     * Find multiple products by IDs with all related details.
+     * Fully non-blocking with concurrent fetching of related data.
+     */
+    suspend fun findByIds(ids: List<Long>): List<ProductDetail> {
+        if (ids.isEmpty()) return emptyList()
+        
+        val products = findProductsByIds(ids)
+        if (products.isEmpty()) return emptyList()
+        
+        val productIds = products.map { it.id }
+        val categoryIds = products.mapNotNull { it.categoryId }.distinct()
+        
+        // Fetch all related data concurrently (all non-blocking)
+        return coroutineScope {
+            val categoriesDeferred = async {
+                if (categoryIds.isNotEmpty()) {
+                    findCategoriesByIds(categoryIds).associateBy { it.id }
+                } else {
+                    emptyMap()
+                }
+            }
+            val variantsDeferred = async { 
+                findVariantsByProductIds(productIds).groupBy { it.productId } 
+            }
+            val mediaDeferred = async { 
+                findMediaByProductIds(productIds).groupBy { it.productId } 
+            }
+            
+            val categories = categoriesDeferred.await()
+            val variantsByProductId = variantsDeferred.await()
+            val mediaByProductId = mediaDeferred.await()
+            
+            products.map { product ->
+                ProductDetail.fromProduct(
+                    product = product,
+                    category = product.categoryId?.let { categories[it] },
+                    variants = variantsByProductId[product.id] ?: emptyList(),
+                    media = mediaByProductId[product.id] ?: emptyList()
+                )
+            }
+        }
+    }
+
+    private suspend fun findProductById(id: Long): Product? {
         val sql = """
             SELECT id, base_sku, name, description, features, status, 
                    source, source_sku, source_url, category_id, attributes
             FROM products WHERE id = ?
         """.trimIndent()
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                stmt.setLong(1, id)
-                stmt.executeQuery().use { rs ->
-                    if (rs.next()) mapToProduct(rs) else null
-                }
-            }
-        }
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                Flux.from(conn.createStatement(sql)
+                    .bind(0, id)
+                    .execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToProduct(row) }
+                    }
+            },
+            { conn -> conn.close() }
+        ).awaitFirstOrNull()
     }
 
-    private fun findProductsByIds(ids: List<Long>): List<Product> {
+    private suspend fun findProductsByIds(ids: List<Long>): List<Product> {
         if (ids.isEmpty()) return emptyList()
         
-        val placeholders = ids.joinToString(",") { "?" }
+        val placeholders = ids.indices.joinToString(",") { "?" }
         val sql = """
             SELECT id, base_sku, name, description, features, status, 
                    source, source_sku, source_url, category_id, attributes
             FROM products WHERE id IN ($placeholders)
         """.trimIndent()
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                val statement = conn.createStatement(sql)
                 ids.forEachIndexed { index, id ->
-                    stmt.setLong(index + 1, id)
+                    statement.bind(index, id)
                 }
-                stmt.executeQuery().use { rs ->
-                    val products = mutableListOf<Product>()
-                    while (rs.next()) {
-                        products.add(mapToProduct(rs))
+                Flux.from(statement.execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToProduct(row) }
                     }
-                    products
-                }
-            }
-        }
+            },
+            { conn -> conn.close() }
+        ).asFlow().toList()
     }
 
-    private fun findCategoryById(id: Long): Category? {
+    private suspend fun findCategoryById(id: Long): Category? {
         val sql = "SELECT id, name, description FROM categories WHERE id = ?"
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                stmt.setLong(1, id)
-                stmt.executeQuery().use { rs ->
-                    if (rs.next()) mapToCategory(rs) else null
-                }
-            }
-        }
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                Flux.from(conn.createStatement(sql)
+                    .bind(0, id)
+                    .execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToCategory(row) }
+                    }
+            },
+            { conn -> conn.close() }
+        ).awaitFirstOrNull()
     }
 
-    private fun findCategoriesByIds(ids: List<Long>): List<Category> {
+    private suspend fun findCategoriesByIds(ids: List<Long>): List<Category> {
         if (ids.isEmpty()) return emptyList()
         
-        val placeholders = ids.joinToString(",") { "?" }
+        val placeholders = ids.indices.joinToString(",") { "?" }
         val sql = "SELECT id, name, description FROM categories WHERE id IN ($placeholders)"
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                val statement = conn.createStatement(sql)
                 ids.forEachIndexed { index, id ->
-                    stmt.setLong(index + 1, id)
+                    statement.bind(index, id)
                 }
-                stmt.executeQuery().use { rs ->
-                    val categories = mutableListOf<Category>()
-                    while (rs.next()) {
-                        categories.add(mapToCategory(rs))
+                Flux.from(statement.execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToCategory(row) }
                     }
-                    categories
-                }
-            }
-        }
+            },
+            { conn -> conn.close() }
+        ).asFlow().toList()
     }
 
-    private fun findVariantsByProductId(productId: Long): List<ProductVariant> {
+    private suspend fun findVariantsByProductId(productId: Long): List<ProductVariant> {
         val sql = """
             SELECT id, product_id, variant_sku, quantity, price, currency, attributes
             FROM product_variants WHERE product_id = ?
         """.trimIndent()
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                stmt.setLong(1, productId)
-                stmt.executeQuery().use { rs ->
-                    val variants = mutableListOf<ProductVariant>()
-                    while (rs.next()) {
-                        variants.add(mapToProductVariant(rs))
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                Flux.from(conn.createStatement(sql)
+                    .bind(0, productId)
+                    .execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToProductVariant(row) }
                     }
-                    variants
-                }
-            }
-        }
+            },
+            { conn -> conn.close() }
+        ).asFlow().toList()
     }
 
-    private fun findVariantsByProductIds(productIds: List<Long>): List<ProductVariant> {
+    private suspend fun findVariantsByProductIds(productIds: List<Long>): List<ProductVariant> {
         if (productIds.isEmpty()) return emptyList()
         
-        val placeholders = productIds.joinToString(",") { "?" }
+        val placeholders = productIds.indices.joinToString(",") { "?" }
         val sql = """
             SELECT id, product_id, variant_sku, quantity, price, currency, attributes
             FROM product_variants WHERE product_id IN ($placeholders)
         """.trimIndent()
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                val statement = conn.createStatement(sql)
                 productIds.forEachIndexed { index, id ->
-                    stmt.setLong(index + 1, id)
+                    statement.bind(index, id)
                 }
-                stmt.executeQuery().use { rs ->
-                    val variants = mutableListOf<ProductVariant>()
-                    while (rs.next()) {
-                        variants.add(mapToProductVariant(rs))
+                Flux.from(statement.execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToProductVariant(row) }
                     }
-                    variants
-                }
-            }
-        }
+            },
+            { conn -> conn.close() }
+        ).asFlow().toList()
     }
 
-    private fun findMediaByProductId(productId: Long): List<ProductMedia> {
+    private suspend fun findMediaByProductId(productId: Long): List<ProductMedia> {
         val sql = """
             SELECT id, product_id, variant_id, type, resolution, url
             FROM product_media WHERE product_id = ?
         """.trimIndent()
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                stmt.setLong(1, productId)
-                stmt.executeQuery().use { rs ->
-                    val media = mutableListOf<ProductMedia>()
-                    while (rs.next()) {
-                        media.add(mapToProductMedia(rs))
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                Flux.from(conn.createStatement(sql)
+                    .bind(0, productId)
+                    .execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToProductMedia(row) }
                     }
-                    media
-                }
-            }
-        }
+            },
+            { conn -> conn.close() }
+        ).asFlow().toList()
     }
 
-    private fun findMediaByProductIds(productIds: List<Long>): List<ProductMedia> {
+    private suspend fun findMediaByProductIds(productIds: List<Long>): List<ProductMedia> {
         if (productIds.isEmpty()) return emptyList()
         
-        val placeholders = productIds.joinToString(",") { "?" }
+        val placeholders = productIds.indices.joinToString(",") { "?" }
         val sql = """
             SELECT id, product_id, variant_id, type, resolution, url
             FROM product_media WHERE product_id IN ($placeholders)
         """.trimIndent()
         
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
+        return Flux.usingWhen(
+            pool.create(),
+            { conn ->
+                val statement = conn.createStatement(sql)
                 productIds.forEachIndexed { index, id ->
-                    stmt.setLong(index + 1, id)
+                    statement.bind(index, id)
                 }
-                stmt.executeQuery().use { rs ->
-                    val media = mutableListOf<ProductMedia>()
-                    while (rs.next()) {
-                        media.add(mapToProductMedia(rs))
+                Flux.from(statement.execute())
+                    .flatMap { result ->
+                        result.map { row, _ -> mapToProductMedia(row) }
                     }
-                    media
-                }
-            }
-        }
+            },
+            { conn -> conn.close() }
+        ).asFlow().toList()
     }
 
-    fun getRandomProductIds(count: Int): List<Long> {
-        val sql = "SELECT id FROM products ORDER BY RAND() LIMIT ?"
-        
-        return DatabaseConfig.getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                stmt.setInt(1, count)
-                stmt.executeQuery().use { rs ->
-                    val ids = mutableListOf<Long>()
-                    while (rs.next()) {
-                        ids.add(rs.getLong("id"))
-                    }
-                    ids
-                }
-            }
-        }
-    }
-
-    private fun mapToProduct(rs: ResultSet): Product {
+    // Row mappers for R2DBC
+    
+    private fun mapToProduct(row: Row): Product {
         return Product(
-            id = rs.getLong("id"),
-            baseSku = rs.getString("base_sku"),
-            name = rs.getString("name"),
-            description = rs.getString("description"),
-            features = rs.getString("features"),
-            status = rs.getString("status"),
-            source = rs.getString("source"),
-            sourceSku = rs.getString("source_sku"),
-            sourceUrl = rs.getString("source_url"),
-            categoryId = rs.getLong("category_id").takeIf { !rs.wasNull() },
-            attributes = rs.getString("attributes")
+            id = row.get("id", java.lang.Long::class.java)?.toLong() ?: 0L,
+            baseSku = row.get("base_sku", String::class.java),
+            name = row.get("name", String::class.java),
+            description = row.get("description", String::class.java),
+            features = row.get("features", String::class.java),
+            status = row.get("status", String::class.java),
+            source = row.get("source", String::class.java),
+            sourceSku = row.get("source_sku", String::class.java),
+            sourceUrl = row.get("source_url", String::class.java),
+            categoryId = row.get("category_id", java.lang.Long::class.java)?.toLong(),
+            attributes = row.get("attributes", String::class.java)
         )
     }
 
-    private fun mapToCategory(rs: ResultSet): Category {
+    private fun mapToCategory(row: Row): Category {
         return Category(
-            id = rs.getLong("id"),
-            name = rs.getString("name"),
-            description = rs.getString("description")
+            id = row.get("id", java.lang.Long::class.java)?.toLong() ?: 0L,
+            name = row.get("name", String::class.java),
+            description = row.get("description", String::class.java)
         )
     }
 
-    private fun mapToProductVariant(rs: ResultSet): ProductVariant {
+    private fun mapToProductVariant(row: Row): ProductVariant {
         return ProductVariant(
-            id = rs.getLong("id"),
-            productId = rs.getLong("product_id"),
-            variantSku = rs.getString("variant_sku"),
-            quantity = rs.getInt("quantity"),
-            price = rs.getDouble("price"),
-            currency = rs.getString("currency") ?: "USD",
-            attributes = rs.getString("attributes")
+            id = row.get("id", java.lang.Long::class.java)?.toLong() ?: 0L,
+            productId = row.get("product_id", java.lang.Long::class.java)?.toLong() ?: 0L,
+            variantSku = row.get("variant_sku", String::class.java),
+            quantity = row.get("quantity", java.lang.Integer::class.java)?.toInt() ?: 0,
+            price = row.get("price", java.lang.Double::class.java)?.toDouble() ?: 0.0,
+            currency = row.get("currency", String::class.java) ?: "USD",
+            attributes = row.get("attributes", String::class.java)
         )
     }
 
-    private fun mapToProductMedia(rs: ResultSet): ProductMedia {
+    private fun mapToProductMedia(row: Row): ProductMedia {
         return ProductMedia(
-            id = rs.getLong("id"),
-            productId = rs.getLong("product_id"),
-            variantId = rs.getLong("variant_id").takeIf { !rs.wasNull() },
-            type = rs.getString("type"),
-            resolution = rs.getString("resolution"),
-            url = rs.getString("url")
+            id = row.get("id", java.lang.Long::class.java)?.toLong() ?: 0L,
+            productId = row.get("product_id", java.lang.Long::class.java)?.toLong() ?: 0L,
+            variantId = row.get("variant_id", java.lang.Long::class.java)?.toLong(),
+            type = row.get("type", String::class.java),
+            resolution = row.get("resolution", String::class.java),
+            url = row.get("url", String::class.java)
         )
     }
 }
