@@ -18,8 +18,8 @@ This document defines the technical constraints, assumptions, and dependencies f
 | Component | Technology | Version | Notes |
 |-----------|------------|---------|-------|
 | Database | MySQL | 8.x | Single instance |
-| Driver | MySQL Connector/J | 8.x | JDBC driver |
-| Connection Pool | HikariCP | 5.x | High-performance pool |
+| Driver | R2DBC | 1.3.0 | JDBC driver |
+| Connection Pool | r2dbc-pool | 1.0.1 | High-performance pool |
 
 ### Benchmark Tools
 

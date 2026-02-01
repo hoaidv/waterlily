@@ -32,12 +32,16 @@ end
 
 -- Generate request for each iteration
 function request()
+    local headers = {}
+    headers["Content-Type"] = "application/json"
+    headers["Accept"] = "application/json"
+
     counter = counter + 1
     local idx = (counter % #product_ids) + 1
     local id = product_ids[idx]
     
     local path = "/api/v1/products/" .. id
-    return wrk.format("GET", path)
+    return wrk.format("GET", path, headers)
 end
 
 -- Track response status codes
