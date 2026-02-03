@@ -11,6 +11,12 @@ application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
 
+ktor {
+    fatJar {
+        archiveFileName.set("waterlily.jar")
+    }
+}
+
 dependencies {
     // Ktor server
     implementation(libs.ktor.server.core)

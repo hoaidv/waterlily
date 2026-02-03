@@ -5,8 +5,11 @@ import io.asyncer.r2dbc.mysql.MySqlConnectionFactory
 import io.r2dbc.pool.ConnectionPool
 import io.r2dbc.pool.ConnectionPoolConfiguration
 import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.ValidationDepth
 import io.ktor.server.application.*
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.slf4j.LoggerFactory
+import reactor.core.publisher.Mono
 import java.time.Duration
 
 /**
@@ -81,6 +84,32 @@ object R2dbcConfig {
      * Get the connection pool for executing queries.
      */
     fun getConnectionPool(): ConnectionPool = connectionPool
+    
+    /**
+     * Check if the database connection is healthy.
+     * Executes a simple query to verify connectivity.
+     * 
+     * @return true if DB is reachable, false otherwise
+     */
+    suspend fun isHealthy(): Boolean {
+        if (!::connectionPool.isInitialized) {
+            return false
+        }
+        
+        return try {
+            // Use a simple validation query
+            val result = Mono.from(connectionPool.create())
+                .flatMap { connection ->
+                    Mono.from(connection.validate(ValidationDepth.REMOTE))
+                        .doFinally { connection.close() }
+                }
+                .awaitFirstOrNull()
+            result == true
+        } catch (e: Exception) {
+            logger.warn("Database health check failed: ${e.message}")
+            false
+        }
+    }
     
     /**
      * Close the connection pool gracefully.

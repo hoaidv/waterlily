@@ -6,7 +6,7 @@
 
 local product_ids = {}
 local zipf_cdf = {}  -- Cumulative distribution function for Zipfian sampling
-local zipf_s = 1     -- Zipfian exponent (higher = more skewed toward popular items)
+local zipf_s = 1.1     -- Zipfian exponent (higher = more skewed toward popular items)
 local errors_4xx = 0
 local errors_5xx = 0
 
@@ -222,6 +222,6 @@ function done(summary, latency, requests)
     io.stderr:write(string.format("Requests: %d (%.2f RPS)\n", requests_total, rps))
     io.stderr:write(string.format("Latency: avg=%.2fms, p50=%.2fms, p95=%.2fms, p99=%.2fms\n", avg_ms, p50_ms, p95_ms, p99_ms))
     io.stderr:write(string.format("Errors: 4xx=%d, 5xx=%d, socket=%d\n", errors_4xx, errors_5xx, socket_connect + socket_read + socket_write + socket_timeout))
-    io.stderr:write(string.format("Access pattern: Zipfian (s=%d, N=%d)\n", zipf_s, #product_ids))
+    io.stderr:write(string.format("Access pattern: Zipfian (s=%f, N=%d)\n", zipf_s, #product_ids))
     io.stderr:write("\nTo get cache metrics, query: curl http://localhost:8080/monitor/cache\n")
 end

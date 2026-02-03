@@ -27,6 +27,9 @@ cache:
     productDetail:
         enabled: true              # Enable/disable cache (for A/B testing)
         maxSize: 2000000           # Maximum number of entries (2M)
+        warmup:
+            enabled: true          # Enable cache warmup on startup
+            productIdsFile: "experiment/product_ids.txt"  # Path to product IDs file
 
 # Netty thread blocking monitor
 monitor:

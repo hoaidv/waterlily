@@ -1,5 +1,6 @@
 package com.discovery
 
+import com.discovery.cache.CacheWarmup
 import com.discovery.cache.ProductDetailCache
 import com.discovery.config.R2dbcConfig
 import com.discovery.plugins.BlockingMonitorPlugin
@@ -16,9 +17,41 @@ import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
+}
+
+/**
+ * Application readiness state holder.
+ * Used by health routes to report readiness status.
+ * 
+ * Note: Application is marked ready immediately after routes are configured.
+ * Cache warmup runs in the background and doesn't block application startup.
+ */
+object AppReadiness {
+    @Volatile
+    var isReady: Boolean = false
+        private set
+    
+    @Volatile
+    var cache: ProductDetailCache? = null
+        private set
+    
+    @Volatile
+    var warmupInProgress: Boolean = false
+        internal set
+    
+    fun markReady() {
+        isReady = true
+    }
+    
+    fun setCache(cache: ProductDetailCache?) {
+        this.cache = cache
+    }
 }
 
 fun Application.module() {
@@ -57,6 +90,10 @@ fun Application.module() {
         log.info("ProductDetail cache disabled")
         null
     }
+    
+    // Store cache reference for health routes
+    AppReadiness.setCache(cache)
+    
     val productService = ProductService(repository, cache)
 
     // Configure routes
@@ -65,6 +102,37 @@ fun Application.module() {
         productRoutes(productService)
         monitorRoutes(productService)
         metricsRoutes(prometheusMeterRegistry)
+    }
+    
+    // Mark application as ready (before warmup - warmup runs in background)
+    AppReadiness.markReady()
+    log.info("Application is ready to serve requests")
+
+    // Cache warmup (runs in background, does not block application startup)
+    val warmupEnabled = environment.config.propertyOrNull("cache.productDetail.warmup.enabled")?.getString()?.toBoolean() ?: false
+    val warmupFile = environment.config.propertyOrNull("cache.productDetail.warmup.productIdsFile")?.getString()
+    
+    if (cache != null && warmupEnabled && warmupFile != null) {
+        log.info("Cache warmup enabled, starting background warmup from: $warmupFile")
+        AppReadiness.warmupInProgress = true
+        
+        // Launch warmup in background coroutine
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val productIds = CacheWarmup.readProductIds(warmupFile, cacheMaxSize)
+                if (productIds.isNotEmpty()) {
+                    cache.warmup(productIds)
+                } else {
+                    log.warn("No product IDs loaded for warmup - cache will fill naturally on first access")
+                }
+            } catch (e: Exception) {
+                log.error("Cache warmup failed: ${e.message}", e)
+            } finally {
+                AppReadiness.warmupInProgress = false
+            }
+        }
+    } else if (cache != null && warmupEnabled) {
+        log.warn("Cache warmup enabled but productIdsFile not configured")
     }
 
     // Shutdown hook
