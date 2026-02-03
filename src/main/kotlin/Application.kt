@@ -7,11 +7,15 @@ import com.discovery.plugins.configureSerialization
 import com.discovery.plugins.configureStatusPages
 import com.discovery.repository.ProductRepository
 import com.discovery.routes.healthRoutes
+import com.discovery.routes.metricsRoutes
 import com.discovery.routes.monitorRoutes
 import com.discovery.routes.productRoutes
 import com.discovery.service.ProductService
 import io.ktor.server.application.*
+import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -24,6 +28,12 @@ fun Application.module() {
     // Configure plugins
     configureSerialization()
     configureStatusPages()
+    
+    // Configure Prometheus metrics
+    val prometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    install(MicrometerMetrics) {
+        registry = prometheusMeterRegistry
+    }
     
     // Configure Netty blocking monitor
     install(BlockingMonitorPlugin) {
@@ -42,7 +52,7 @@ fun Application.module() {
     val repository = ProductRepository()
     val cache = if (cacheEnabled) {
         log.info("ProductDetail cache enabled with maxSize=$cacheMaxSize")
-        ProductDetailCache(repository, cacheMaxSize)
+        ProductDetailCache(repository, prometheusMeterRegistry, cacheMaxSize)
     } else {
         log.info("ProductDetail cache disabled")
         null
@@ -54,6 +64,7 @@ fun Application.module() {
         healthRoutes()
         productRoutes(productService)
         monitorRoutes(productService)
+        metricsRoutes(prometheusMeterRegistry)
     }
 
     // Shutdown hook

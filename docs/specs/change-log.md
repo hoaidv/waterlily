@@ -26,3 +26,61 @@ Cache for ProductDetail per ID
 - Benchmark this by:
   + Randomly load N=10M product IDs into a file
   + Simulating the product access pattern in benchmark script
+
+# 03/02/2026 - hoaidv
+
+Real-time Monitoring with Prometheus and Grafana
+
+## Data Collection
+
+- Library: Micrometer with Prometheus registry
+- Dependencies to add:
+  + `io.ktor:ktor-server-metrics-micrometer` (Ktor plugin)
+  + `io.micrometer:micrometer-registry-prometheus`
+- Expose metrics at `GET /metrics` in Prometheus format (for external scraper)
+- Prometheus server already running. No need to do anything.
+
+## Metrics to Collect
+
+The following prometheus metrics are expected at the `GET /metrics` endpoint 
+
+- JVM Vitals (automatic via Micrometer)
+- Ktor Server Vitals (automatic via ktor-server-metrics-micrometer)
+- Cache Metrics (custom counters)
+  - `product_cache_requests_total` - total requests to cache
+  - `product_cache_hits_total` - cache hits
+  - `product_db_hits_total` - database hits (cache misses)
+
+### Cache Metrics - Prometheus Queries
+
+| Metric | PromQL Query |
+|--------|-------------|
+| Cache Hits/sec | `rate(product_cache_hits_total[1m])` |
+| DB Hits/sec | `rate(product_db_hits_total[1m])` |
+| Cache Hit Rate (%) | `100 * rate(product_cache_hits_total[1m]) / rate(product_cache_requests_total[1m])` |
+
+### Request Metrics
+
+Request Rate
+
+```promQL
+sum(rate(ktor_http_server_requests_seconds_count{instance="localhost:8080"}[30s])) by (method, route, status)
+```
+
+Response Time
+
+```promQL
+sum by (route, method, status) (
+    rate(ktor_http_server_requests_seconds_sum{instance="localhost:8080"}[30s])
+)
+/
+sum by (route, method, status) (
+    rate(ktor_http_server_requests_seconds_count{instance="localhost:8080"}[30s])
+)
+```
+
+## Dashboards
+
+- Grafana server already running, no need to do anything
+  - JVM Dashboard: Use **4701** (JVM Micrometer)
+  - Ktor Dashboard: Build it yourself.

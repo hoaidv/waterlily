@@ -32,6 +32,10 @@ dependencies {
     // Caching
     implementation(libs.caffeine)
 
+    // Metrics
+    implementation(libs.ktor.server.metrics.micrometer)
+    implementation(libs.micrometer.registry.prometheus)
+
     // Logging
     implementation(libs.logback.classic)
 

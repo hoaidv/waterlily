@@ -4,7 +4,8 @@ import com.discovery.model.ProductDetail
 import com.discovery.repository.ProductRepository
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import java.util.concurrent.atomic.AtomicLong
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 
 /**
  * LRU cache for ProductDetail by ID with metrics tracking.
@@ -14,9 +15,11 @@ import java.util.concurrent.atomic.AtomicLong
  * - Null results (product not found) are not cached to allow retry
  * - No cache invalidation (as per spec)
  * - No warmup strategy - cache fills naturally on first access
+ * - Metrics exposed via Micrometer for Prometheus scraping
  */
 class ProductDetailCache(
     private val repository: ProductRepository,
+    private val meterRegistry: MeterRegistry,
     maxSize: Long = DEFAULT_MAX_SIZE
 ) {
     companion object {
@@ -27,10 +30,19 @@ class ProductDetailCache(
         .maximumSize(maxSize)
         .build()
 
-    // Metrics counters
-    private val requestsTotal = AtomicLong(0)
-    private val cacheHitsTotal = AtomicLong(0)
-    private val dbHitsTotal = AtomicLong(0)
+    // Micrometer counters (automatically exported as _total for Prometheus)
+    private val requestsCounter: Counter = Counter.builder("product_cache_requests")
+        .description("Total requests to product cache")
+        .register(meterRegistry)
+    
+    private val cacheHitsCounter: Counter = Counter.builder("product_cache_hits")
+        .description("Cache hits")
+        .register(meterRegistry)
+    
+    private val dbHitsCounter: Counter = Counter.builder("product_db_hits")
+        .description("Database hits (cache misses)")
+        .register(meterRegistry)
+
     private val startTimeMs = System.currentTimeMillis()
 
     /**
@@ -38,17 +50,17 @@ class ProductDetailCache(
      * On cache miss, fetches from repository and caches non-null results.
      */
     suspend fun getById(id: Long): ProductDetail? {
-        requestsTotal.incrementAndGet()
+        requestsCounter.increment()
 
         // Check cache first
         val cached = cache.getIfPresent(id)
         if (cached != null) {
-            cacheHitsTotal.incrementAndGet()
+            cacheHitsCounter.increment()
             return cached
         }
 
         // Cache miss - fetch from database
-        dbHitsTotal.incrementAndGet()
+        dbHitsCounter.increment()
         val product = repository.findById(id)
 
         // Cache non-null results only
@@ -63,9 +75,9 @@ class ProductDetailCache(
      * Get current cache statistics.
      */
     fun getStats(): CacheStats {
-        val requests = requestsTotal.get()
-        val hits = cacheHitsTotal.get()
-        val dbHits = dbHitsTotal.get()
+        val requests = requestsCounter.count().toLong()
+        val hits = cacheHitsCounter.count().toLong()
+        val dbHits = dbHitsCounter.count().toLong()
         val uptimeMs = System.currentTimeMillis() - startTimeMs
 
         return CacheStats(
@@ -77,15 +89,6 @@ class ProductDetailCache(
             cacheSize = cache.estimatedSize(),
             maxSize = DEFAULT_MAX_SIZE
         )
-    }
-
-    /**
-     * Reset statistics (useful for benchmarking).
-     */
-    fun resetStats() {
-        requestsTotal.set(0)
-        cacheHitsTotal.set(0)
-        dbHitsTotal.set(0)
     }
 }
 

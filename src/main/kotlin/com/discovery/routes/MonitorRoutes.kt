@@ -5,7 +5,17 @@ import com.discovery.service.ProductService
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.serialization.Serializable
+
+/**
+ * Prometheus metrics endpoint for external scraping.
+ */
+fun Route.metricsRoutes(prometheusMeterRegistry: PrometheusMeterRegistry) {
+    get("/metrics") {
+        call.respondText(prometheusMeterRegistry.scrape())
+    }
+}
 
 @Serializable
 data class CacheStatsResponse(
