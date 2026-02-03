@@ -1,12 +1,55 @@
--- Benchmark script for single product API
+-- Benchmark script for single product API with Zipfian access pattern
 -- Usage: WRK_CCU=1000 WRK_OUTPUT_FILE=result.json wrk -t12 -c1000 -d60s -s benchmark_single.lua http://localhost:8080
+--
+-- Access pattern: Zipfian distribution with exponent s=4
+-- Some products are accessed much more frequently than others (realistic e-commerce pattern)
 
 local product_ids = {}
-local counter = 0
+local zipf_cdf = {}  -- Cumulative distribution function for Zipfian sampling
+local zipf_s = 1     -- Zipfian exponent (higher = more skewed toward popular items)
 local errors_4xx = 0
 local errors_5xx = 0
 
--- Initialize: load product IDs from file
+-- Precompute Zipfian CDF for efficient sampling
+-- For Zipfian distribution: P(rank=i) ∝ 1/i^s
+local function build_zipf_cdf(n, s)
+    local cdf = {}
+    local sum = 0
+    
+    -- Calculate normalization constant (harmonic number)
+    for i = 1, n do
+        sum = sum + (1.0 / math.pow(i, s))
+    end
+    
+    -- Build CDF
+    local cumulative = 0
+    for i = 1, n do
+        cumulative = cumulative + (1.0 / math.pow(i, s)) / sum
+        cdf[i] = cumulative
+    end
+    
+    return cdf
+end
+
+-- Sample from Zipfian distribution using binary search on CDF
+local function zipf_sample(cdf, n)
+    local u = math.random()
+    
+    -- Binary search for the rank
+    local lo, hi = 1, n
+    while lo < hi do
+        local mid = math.floor((lo + hi) / 2)
+        if cdf[mid] < u then
+            lo = mid + 1
+        else
+            hi = mid
+        end
+    end
+    
+    return lo
+end
+
+-- Initialize: load product IDs from file and build Zipfian CDF
 function init(args)
     local file = io.open("experiment/product_ids.txt", "r")
     if not file then
@@ -28,17 +71,29 @@ function init(args)
     end
     
     io.stderr:write("Loaded " .. #product_ids .. " product IDs\n")
+    
+    -- Build Zipfian CDF for access pattern simulation
+    io.stderr:write("Building Zipfian CDF (s=" .. zipf_s .. ", N=" .. #product_ids .. ")...\n")
+    zipf_cdf = build_zipf_cdf(#product_ids, zipf_s)
+    io.stderr:write("Zipfian CDF ready. Top product expected ~" .. string.format("%.1f%%", 100 / math.pow(1, zipf_s) / (function()
+        local sum = 0
+        for i = 1, math.min(1000, #product_ids) do sum = sum + 1/math.pow(i, zipf_s) end
+        return sum * (#product_ids / math.min(1000, #product_ids))
+    end)()) .. " of requests\n")
+    
+    -- Seed random number generator
+    math.randomseed(os.time())
 end
 
--- Generate request for each iteration
+-- Generate request for each iteration using Zipfian distribution
 function request()
     local headers = {}
     headers["Content-Type"] = "application/json"
     headers["Accept"] = "application/json"
 
-    counter = counter + 1
-    local idx = (counter % #product_ids) + 1
-    local id = product_ids[idx]
+    -- Sample product ID using Zipfian distribution
+    local rank = zipf_sample(zipf_cdf, #product_ids)
+    local id = product_ids[rank]
     
     local path = "/api/v1/products/" .. id
     return wrk.format("GET", path, headers)
@@ -94,7 +149,10 @@ function done(summary, latency, requests)
     "access_pattern": {
       "request_type": "READ",
       "throughput": "HEAVY",
-      "complexity": "MEDIUM"
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": %d,
+      "product_count": %d
     }
   },
   "benchmark_target": {
@@ -128,8 +186,11 @@ function done(summary, latency, requests)
       "4xx": %d,
       "5xx": %d
     }
-  }
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
 }]],
+        zipf_s,
+        #product_ids,
         ccu,
         timestamp,
         duration_seconds,
@@ -161,4 +222,6 @@ function done(summary, latency, requests)
     io.stderr:write(string.format("Requests: %d (%.2f RPS)\n", requests_total, rps))
     io.stderr:write(string.format("Latency: avg=%.2fms, p50=%.2fms, p95=%.2fms, p99=%.2fms\n", avg_ms, p50_ms, p95_ms, p99_ms))
     io.stderr:write(string.format("Errors: 4xx=%d, 5xx=%d, socket=%d\n", errors_4xx, errors_5xx, socket_connect + socket_read + socket_write + socket_timeout))
+    io.stderr:write(string.format("Access pattern: Zipfian (s=%d, N=%d)\n", zipf_s, #product_ids))
+    io.stderr:write("\nTo get cache metrics, query: curl http://localhost:8080/monitor/cache\n")
 end

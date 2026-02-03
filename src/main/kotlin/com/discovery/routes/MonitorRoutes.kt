@@ -1,10 +1,23 @@
 package com.discovery.routes
 
 import com.discovery.monitor.NettyBlockingMonitor
+import com.discovery.service.ProductService
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+
+@Serializable
+data class CacheStatsResponse(
+    val requestsTotal: Long,
+    val cacheHitsTotal: Long,
+    val dbHitsTotal: Long,
+    val cacheHitPercent: Double,
+    val uptimeMs: Long,
+    val cacheSize: Long,
+    val maxSize: Long,
+    val enabled: Boolean
+)
 
 @Serializable
 data class BlockingMonitorStats(
@@ -32,10 +45,41 @@ data class MonitorResponse(
 )
 
 /**
- * Routes for monitoring Netty thread blocking.
+ * Routes for monitoring Netty thread blocking and cache statistics.
  */
-fun Route.monitorRoutes() {
+fun Route.monitorRoutes(productService: ProductService) {
     route("/monitor") {
+        /**
+         * GET /monitor/cache
+         * Returns ProductDetail cache statistics
+         */
+        get("/cache") {
+            val stats = productService.getCacheStats()
+            if (stats != null) {
+                call.respond(CacheStatsResponse(
+                    requestsTotal = stats.requestsTotal,
+                    cacheHitsTotal = stats.cacheHitsTotal,
+                    dbHitsTotal = stats.dbHitsTotal,
+                    cacheHitPercent = stats.cacheHitPercent,
+                    uptimeMs = stats.uptimeMs,
+                    cacheSize = stats.cacheSize,
+                    maxSize = stats.maxSize,
+                    enabled = true
+                ))
+            } else {
+                call.respond(CacheStatsResponse(
+                    requestsTotal = 0,
+                    cacheHitsTotal = 0,
+                    dbHitsTotal = 0,
+                    cacheHitPercent = 0.0,
+                    uptimeMs = 0,
+                    cacheSize = 0,
+                    maxSize = 0,
+                    enabled = false
+                ))
+            }
+        }
+
         /**
          * GET /monitor/blocking
          * Returns current blocking monitor statistics

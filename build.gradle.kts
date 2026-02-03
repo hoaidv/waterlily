@@ -29,6 +29,9 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.mysql.connector)
 
+    // Caching
+    implementation(libs.caffeine)
+
     // Logging
     implementation(libs.logback.classic)
 

@@ -1,9 +1,11 @@
 package com.discovery
 
+import com.discovery.cache.ProductDetailCache
 import com.discovery.config.R2dbcConfig
 import com.discovery.plugins.BlockingMonitorPlugin
 import com.discovery.plugins.configureSerialization
 import com.discovery.plugins.configureStatusPages
+import com.discovery.repository.ProductRepository
 import com.discovery.routes.healthRoutes
 import com.discovery.routes.monitorRoutes
 import com.discovery.routes.productRoutes
@@ -32,14 +34,26 @@ fun Application.module() {
         stackTraceOnWarning = environment.config.propertyOrNull("monitor.blocking.stackTraceOnWarning")?.getString()?.toBoolean() ?: true
     }
 
-    // Initialize services
-    val productService = ProductService()
+    // Initialize cache and services
+    val cacheEnabled = environment.config.propertyOrNull("cache.productDetail.enabled")?.getString()?.toBoolean() ?: true
+    val cacheMaxSize = environment.config.propertyOrNull("cache.productDetail.maxSize")?.getString()?.toLongOrNull() 
+        ?: ProductDetailCache.DEFAULT_MAX_SIZE
+    
+    val repository = ProductRepository()
+    val cache = if (cacheEnabled) {
+        log.info("ProductDetail cache enabled with maxSize=$cacheMaxSize")
+        ProductDetailCache(repository, cacheMaxSize)
+    } else {
+        log.info("ProductDetail cache disabled")
+        null
+    }
+    val productService = ProductService(repository, cache)
 
     // Configure routes
     routing {
         healthRoutes()
         productRoutes(productService)
-        monitorRoutes()
+        monitorRoutes(productService)
     }
 
     // Shutdown hook
