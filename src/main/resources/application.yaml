@@ -6,8 +6,8 @@ ktor:
         port: 8080
         # Netty threading configuration
         connectionGroupSize: 14
-        workerGroupSize: 28
-        callGroupSize: 32
+        workerGroupSize: 100
+        callGroupSize: 100
         shutdownGracePeriod: 2000
         shutdownTimeout: 3000
 
