@@ -6,7 +6,7 @@
 
 local product_ids = {}
 local zipf_cdf = {}  -- Cumulative distribution function for Zipfian sampling
-local zipf_s = 1.1     -- Zipfian exponent (higher = more skewed toward popular items)
+local zipf_s = 1.4     -- Zipfian exponent (higher = more skewed toward popular items)
 local errors_3xx = 0
 local errors_4xx = 0
 local errors_5xx = 0

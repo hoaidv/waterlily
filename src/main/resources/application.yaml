@@ -16,9 +16,13 @@ database:
     username: "hoaidv"
     password: "pipipipi"
     # Tuned for high throughput
-    maximumPoolSize: 28
-    minimumIdle: 10
-    connectionTimeout: 30000
+    # Increased pool size to handle high concurrency:
+    # - Each request can use up to 4 concurrent DB connections (product, category, variants, media)
+    # - With 5000 CCU, need sufficient connections to avoid acquisition timeouts
+    # - R2DBC connections are lightweight and non-blocking, so larger pools are feasible
+    maximumPoolSize: 500
+    minimumIdle: 50
+    connectionTimeout: 3000
     idleTimeout: 600000
     maxLifetime: 1800000
 
