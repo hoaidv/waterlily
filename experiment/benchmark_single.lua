@@ -7,8 +7,12 @@
 local product_ids = {}
 local zipf_cdf = {}  -- Cumulative distribution function for Zipfian sampling
 local zipf_s = 1.1     -- Zipfian exponent (higher = more skewed toward popular items)
+local errors_3xx = 0
 local errors_4xx = 0
 local errors_5xx = 0
+
+local counter = 1
+local threads = {}
 
 -- Precompute Zipfian CDF for efficient sampling
 -- For Zipfian distribution: P(rank=i) ∝ 1/i^s
@@ -49,8 +53,18 @@ local function zipf_sample(cdf, n)
     return lo
 end
 
+-- use of setup() to pass
+-- data to and from the threads
+function setup(thread)
+    thread:set("id", counter)
+    table.insert(threads, thread)
+    counter = counter + 1
+end
+
 -- Initialize: load product IDs from file and build Zipfian CDF
 function init(args)
+    requests  = 0
+    responses = 0
     local file = io.open("experiment/product_ids.txt", "r")
     if not file then
         io.stderr:write("Error: Could not open experiment/product_ids.txt\n")
@@ -87,6 +101,9 @@ end
 
 -- Generate request for each iteration using Zipfian distribution
 function request()
+    requests = requests + 1
+
+    -- Build headers
     local headers = {}
     headers["Content-Type"] = "application/json"
     headers["Accept"] = "application/json"
@@ -101,9 +118,13 @@ end
 
 -- Track response status codes
 function response(status, headers, body)
-    if status >= 400 and status < 500 then
+    if 200 <= status and status < 300 then
+        responses = responses + 1
+    elseif 300 <= status and status < 400 then
+        errors_3xx = errors_3xx + 1
+    elseif 400 <= status and status < 500 then
         errors_4xx = errors_4xx + 1
-    elseif status >= 500 then
+    elseif 500 <= status then
         errors_5xx = errors_5xx + 1
     end
 end
@@ -118,6 +139,17 @@ function done(summary, latency, requests)
     local duration_seconds = summary.duration / 1000000  -- microseconds to seconds
     local requests_total = summary.requests
     local rps = requests_total / duration_seconds
+
+    -- Count responses
+    -- We can access each thread initialized in `init` function via `thread` var
+    local total_responses = 0
+
+    for index, thread in ipairs(threads) do
+        local responses = thread:get("responses")
+        total_responses = total_responses + responses
+    end
+
+    local response_per_second = total_responses / duration_seconds
     
     -- Calculate transfer in MB
     local total_bytes = summary.bytes
@@ -194,8 +226,8 @@ function done(summary, latency, requests)
         ccu,
         timestamp,
         duration_seconds,
-        requests_total,
-        rps,
+        total_responses,
+        response_per_second,
         min_ms, avg_ms, max_ms, stdev_ms,
         p50_ms, p95_ms, p99_ms,
         total_mb, rate_mbps,
@@ -219,9 +251,9 @@ function done(summary, latency, requests)
     -- Print summary to stderr
     io.stderr:write("\n--- Benchmark Results ---\n")
     io.stderr:write(string.format("Duration: %.2f seconds\n", duration_seconds))
-    io.stderr:write(string.format("Requests: %d (%.2f RPS)\n", requests_total, rps))
+    io.stderr:write(string.format("Successes: %d (%.2f RPS)\n", total_responses, response_per_second))
     io.stderr:write(string.format("Latency: avg=%.2fms, p50=%.2fms, p95=%.2fms, p99=%.2fms\n", avg_ms, p50_ms, p95_ms, p99_ms))
-    io.stderr:write(string.format("Errors: 4xx=%d, 5xx=%d, socket=%d\n", errors_4xx, errors_5xx, socket_connect + socket_read + socket_write + socket_timeout))
+    io.stderr:write(string.format("Errors: 3xx=%d, 4xx=%d, 5xx=%d, socket=%d\n", errors_3xx, errors_4xx, errors_5xx, socket_connect + socket_read + socket_write + socket_timeout))
     io.stderr:write(string.format("Access pattern: Zipfian (s=%f, N=%d)\n", zipf_s, #product_ids))
     io.stderr:write("\nTo get cache metrics, query: curl http://localhost:8080/monitor/cache\n")
 end
