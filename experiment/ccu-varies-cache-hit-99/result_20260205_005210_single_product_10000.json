@@ -1,0 +1,53 @@
+{
+  "benchmark_context": {
+    "platform": "localhost",
+    "database_type": "MySQL",
+    "database_instances": 1,
+    "access_pattern": {
+      "request_type": "READ",
+      "throughput": "HEAVY",
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": 1,
+      "product_count": 0
+    }
+  },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 10000
+  },
+  "timestamp": "2026-02-04T18:05:38Z",
+  "duration_seconds": 600.10,
+  "metrics": {
+    "requests_total": 32158804,
+    "rps": 53589.08,
+    "latency": {
+      "min_ms": 0.039,
+      "avg_ms": 356.596,
+      "max_ms": 2999.999,
+      "stdev_ms": 490.927,
+      "p50_ms": 95.070,
+      "p95_ms": 1432.213,
+      "p99_ms": 2185.434
+    },
+    "transfer": {
+      "total_mb": 175994.33,
+      "rate_mbps": 293.28
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 3836,
+      "socket.write": 1658,
+      "socket.timeout": 192915,
+      "error.rate": 0.005998823837,
+      "4xx": 0,
+      "5xx": 0
+    },
+    "comments": [
+      "After increasing R2dbc connection pool size to 500, we only get socket errors.",
+      "But this still leads to wrk throttling issues."
+    ]
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
+}

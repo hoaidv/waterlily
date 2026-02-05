@@ -1,0 +1,54 @@
+{
+  "benchmark_context": {
+    "platform": "localhost",
+    "database_type": "MySQL",
+    "database_instances": 1,
+    "access_pattern": {
+      "request_type": "READ",
+      "throughput": "HEAVY",
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": 1,
+      "product_count": 0
+    }
+  },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 10000
+  },
+  "timestamp": "2026-02-04T19:06:32Z",
+  "duration_seconds": 120.08,
+  "metrics": {
+    "requests_total": 24019762,
+    "rps": 200023.83,
+    "latency": {
+      "min_ms": 0.045,
+      "avg_ms": 245.679,
+      "max_ms": 2999.957,
+      "stdev_ms": 399.215,
+      "p50_ms": 71.575,
+      "p95_ms": 1120.521,
+      "p99_ms": 1925.021
+    },
+    "transfer": {
+      "total_mb": 131452.95,
+      "rate_mbps": 1094.67
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 3548,
+      "socket.write": 2854,
+      "socket.timeout": 26071,
+      "error.rate": 0.001351928466,
+      "4xx": 0,
+      "5xx": 0
+    },
+    "comments": [
+      "We run for a very short time. Through put bursts to maximum. Wrk did not throttle.",
+      "We see a lower error rate, and much higher throught put.",
+      "p95 and p99 latency are NOT improved."
+    ]
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
+}

@@ -1,0 +1,81 @@
+=== Waterlily Benchmark ===
+API: single
+CCU Levels: 10000
+Duration: 120s
+Timeout: 3s
+Threads: 12
+Base URL: http://0.0.0.0:8080
+Timestamp: 20260205_020039
+
+Checking health endpoint...
+Health check passed
+
+----------------------------------------
+Running benchmark: API=single, CCU=10000
+Output: experiment/benchmarks/result_20260205_020039_single_product_10000.json
+
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Loaded 10000000 product IDs
+Building Zipfian CDF (s=1.4, N=10000000)...
+Zipfian CDF ready. Top product expected ~0.0% of requests
+Results written to: experiment/benchmarks/result_20260205_020039_single_product_10000.json
+
+--- Benchmark Results ---
+Duration: 120.08 seconds
+Successes: 24019762 (200023.83 RPS)
+Latency: avg=245.68ms, p50=71.58ms, p95=1120.52ms, p99=1925.02ms
+Errors: 3xx=0, 4xx=0, 5xx=0, socket=32473
+Access pattern: Zipfian (s=1.400000, N=0)
+
+To get cache metrics, query: curl http://localhost:8080/monitor/cache
+Running 2m test @ http://0.0.0.0:8080
+  12 threads and 10000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   245.68ms  399.21ms   3.00s    87.94%
+    Req/Sec     8.25k    10.19k  110.53k    88.37%
+  24019764 requests in 2.00m, 128.37GB read
+  Socket errors: connect 0, read 3548, write 2854, timeout 26071
+  Non-2xx or 3xx responses: 2
+Requests/sec: 200023.85
+Transfer/sec:      1.07GB
+JSON file created successfully: experiment/benchmarks/result_20260205_020039_single_product_10000.json
+
+========================================
+Benchmark complete!
+Results saved to: experiment/benchmarks
+Log file: experiment/benchmarks/result_20260205_020039__stdout_stderr.log
+
+Generated JSON files:
+-rw-r--r--@ 1 hoaidv  staff  1145 Feb  5 02:06 experiment/benchmarks/result_20260205_020039_single_product_10000.json

@@ -1,0 +1,19 @@
+Netty
+
+connectionGroupSize: 14
+workerGroupSize: 28
+callGroupSize: 32
+
+R2dbc
+
+maximumPoolSize: 28
+minimumIdle: 10
+
+Network
+
+kern.ipc.somaxconn: 16384
+kern.maxfiles: 368640
+kern.maxfilesperproc: 184320
+net.inet.tcp.msl: 2000
+net.inet.ip.portrange.first: 10000
+net.inet.ip.portrange.last: 65535

@@ -1,0 +1,61 @@
+{
+  "benchmark_context": {
+    "platform": "localhost",
+    "database_type": "MySQL",
+    "database_instances": 1,
+    "access_pattern": {
+      "request_type": "READ",
+      "throughput": "HEAVY",
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": 1.4,
+      "product_count": 0
+    }
+  },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 10000
+  },
+  "timestamp": "2026-02-04T17:12:02Z",
+  "duration_seconds": 600.09,
+  "metrics": {
+    "requests_total": 37856609,
+    "rps": 63085.39,
+    "latency": {
+      "min_ms": 0.037,
+      "avg_ms": 158.167,
+      "max_ms": 2999.914,
+      "stdev_ms": 280.426,
+      "p50_ms": 49.747,
+      "p95_ms": 709.019,
+      "p99_ms": 1397.712
+    },
+    "transfer": {
+      "total_mb": 207191.77,
+      "rate_mbps": 345.27
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 4875,
+      "socket.write": 4635,
+      "socket.timeout": 37911,
+      "error.rate": 0.001252647853,
+      "4xx": 0,
+      "5xx": 0,
+      "details": [
+        "R2dbcTimeoutException: Connection acquisition timed out after 30000ms"
+      ]
+    },
+    "comments": [
+      "After wrk throttled:",
+      "- wrk reports increased latency (p95 = 709ms, p99 = 1398ms)",
+      "- app reports stable very low latency (p99 = hundreds of microseconds)",
+      "=> These are possible problems:", 
+      "(1) wrk is saturated with high CCU. Though it might be OK with same throughput level in much lower CCU.",
+      "(2) network is saturated with too many connections.",
+      "(3) "
+    ]
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
+}

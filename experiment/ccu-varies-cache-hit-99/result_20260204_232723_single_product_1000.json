@@ -1,0 +1,49 @@
+{
+  "benchmark_context": {
+    "platform": "localhost",
+    "database_type": "MySQL",
+    "database_instances": 1,
+    "access_pattern": {
+      "request_type": "READ",
+      "throughput": "HEAVY",
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": 1.4,
+      "cache_hit_rate": [99.75, 99.95],
+      "product_count": 0
+    }
+  },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 1000
+  },
+  "timestamp": "2026-02-04T16:38:23Z",
+  "duration_seconds": 480.10,
+  "metrics": {
+    "requests_total": 60499150,
+    "rps": 126012.97,
+    "latency": {
+      "min_ms": 0.032,
+      "avg_ms": 23.133,
+      "max_ms": 977.389,
+      "stdev_ms": 32.596,
+      "p50_ms": 10.317,
+      "p95_ms": 89.374,
+      "p99_ms": 143.847
+    },
+    "transfer": {
+      "total_mb": 331103.31,
+      "rate_mbps": 689.65
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 0,
+      "socket.write": 0,
+      "socket.timeout": 0,
+      "4xx": 0,
+      "5xx": 0
+    }
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
+}

@@ -1,0 +1,52 @@
+{
+  "benchmark_context": {
+    "platform": "localhost",
+    "database_type": "MySQL",
+    "database_instances": 1,
+    "access_pattern": {
+      "request_type": "READ",
+      "throughput": "HEAVY",
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": 1.4,
+      "product_count": 0
+    }
+  },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 20000
+  },
+  "timestamp": "2026-02-04T17:24:12Z",
+  "duration_seconds": 600.05,
+  "metrics": {
+    "requests_total": 15487238,
+    "rps": 25810.03,
+    "latency": {
+      "min_ms": 0.069,
+      "avg_ms": 416.581,
+      "max_ms": 2999.986,
+      "stdev_ms": 623.356,
+      "p50_ms": 102.587,
+      "p95_ms": 1851.876,
+      "p99_ms": 2618.733
+    },
+    "transfer": {
+      "total_mb": 84785.17,
+      "rate_mbps": 141.30
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 51773,
+      "socket.write": 6998,
+      "socket.timeout": 841671,
+      "error.rate": 0.05814090285,
+      "4xx": 0,
+      "5xx": 0,
+      "details": [
+        "R2dbcTimeoutException: Connection acquisition timed out after 30000ms"
+      ]
+    }
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
+}

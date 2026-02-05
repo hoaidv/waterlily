@@ -1,0 +1,53 @@
+{
+  "benchmark_context": {
+    "platform": "localhost",
+    "database_type": "MySQL",
+    "database_instances": 1,
+    "access_pattern": {
+      "request_type": "READ",
+      "throughput": "HEAVY",
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": 1,
+      "product_count": 0
+    }
+  },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 10000
+  },
+  "timestamp": "2026-02-04T18:44:08Z",
+  "duration_seconds": 480.16,
+  "metrics": {
+    "requests_total": 35511664,
+    "rps": 73958.11,
+    "latency": {
+      "min_ms": 0.036,
+      "avg_ms": 246.651,
+      "max_ms": 2999.987,
+      "stdev_ms": 396.301,
+      "p50_ms": 83.189,
+      "p95_ms": 1118.699,
+      "p99_ms": 1942.924
+    },
+    "transfer": {
+      "total_mb": 194353.35,
+      "rate_mbps": 404.77
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 3183,
+      "socket.write": 1933,
+      "socket.timeout": 77585,
+      "error.rate": 0.002328840462,
+      "4xx": 0,
+      "5xx": 0
+    },
+    "comments": [
+      "p95, p99 latency, error rate and through put are improved.",
+      "But throttling is still there."
+    ]
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
+}

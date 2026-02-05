@@ -1,0 +1,53 @@
+{
+  "benchmark_context": {
+    "platform": "localhost",
+    "database_type": "MySQL",
+    "database_instances": 1,
+    "access_pattern": {
+      "request_type": "READ",
+      "throughput": "HEAVY",
+      "complexity": "MEDIUM",
+      "distribution": "zipfian",
+      "zipfian_exponent": 1.4,
+      "cache_hit_rate": [99.82, 99.88],
+      "product_count": 0
+    }
+  },
+  "benchmark_target": {
+    "api": "single_product",
+    "endpoint": "GET /api/v1/products/{id}",
+    "ccu": 5000
+  },
+  "timestamp": "2026-02-04T16:58:30Z",
+  "duration_seconds": 600.09,
+  "metrics": {
+    "requests_total": 90268470,
+    "rps": 150423.98,
+    "latency": {
+      "min_ms": 0.036,
+      "avg_ms": 43.128,
+      "max_ms": 2999.448,
+      "stdev_ms": 89.885,
+      "p50_ms": 24.121,
+      "p95_ms": 122.791,
+      "p99_ms": 243.981
+    },
+    "transfer": {
+      "total_mb": 494015.06,
+      "rate_mbps": 823.23
+    },
+    "errors": {
+      "socket.connect": 0,
+      "socket.read": 438,
+      "socket.write": 814,
+      "socket.timeout": 405,
+      "error.rate": 0.00001835635411,
+      "4xx": 0,
+      "5xx": 0,
+      "details": [
+        "R2dbcTimeoutException: Connection acquisition timed out after 30000ms"
+      ]
+    }
+  },
+  "cache_metrics_note": "Query GET /monitor/cache before and after benchmark to calculate cache hit rates"
+}
