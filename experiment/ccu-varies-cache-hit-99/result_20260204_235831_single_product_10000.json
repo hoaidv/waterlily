@@ -9,6 +9,7 @@
       "complexity": "MEDIUM",
       "distribution": "zipfian",
       "zipfian_exponent": 1.4,
+      "cache_hit_rate": [99.82, 99.88],
       "product_count": 0
     }
   },
