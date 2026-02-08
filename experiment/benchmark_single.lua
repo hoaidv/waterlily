@@ -7,10 +7,6 @@
 local product_ids = {}
 local zipf_cdf = {}  -- Cumulative distribution function for Zipfian sampling
 local zipf_s = 1.4     -- Zipfian exponent (higher = more skewed toward popular items)
-local errors_3xx = 0
-local errors_4xx = 0
-local errors_5xx = 0
-
 local counter = 1
 local threads = {}
 
@@ -65,6 +61,10 @@ end
 function init(args)
     requests  = 0
     responses = 0
+    errors_3xx = 0
+    errors_4xx = 0
+    errors_5xx = 0
+
     local file = io.open("experiment/product_ids.txt", "r")
     if not file then
         io.stderr:write("Error: Could not open experiment/product_ids.txt\n")
@@ -143,10 +143,18 @@ function done(summary, latency, requests)
     -- Count responses
     -- We can access each thread initialized in `init` function via `thread` var
     local total_responses = 0
-
+    local total_errors_3xx = 0
+    local total_errors_4xx = 0
+    local total_errors_5xx = 0
     for index, thread in ipairs(threads) do
         local responses = thread:get("responses")
+        local errors_3xx = thread:get("errors_3xx")
+        local errors_4xx = thread:get("errors_4xx")
+        local errors_5xx = thread:get("errors_5xx")
         total_responses = total_responses + responses
+        total_errors_3xx = total_errors_3xx + errors_3xx
+        total_errors_4xx = total_errors_4xx + errors_4xx
+        total_errors_5xx = total_errors_5xx + errors_5xx
     end
 
     local response_per_second = total_responses / duration_seconds
@@ -232,7 +240,7 @@ function done(summary, latency, requests)
         p50_ms, p95_ms, p99_ms,
         total_mb, rate_mbps,
         socket_connect, socket_read, socket_write, socket_timeout,
-        errors_4xx, errors_5xx
+        total_errors_4xx, total_errors_5xx
     )
     
     -- Write to output file if specified via environment variable
@@ -253,7 +261,7 @@ function done(summary, latency, requests)
     io.stderr:write(string.format("Duration: %.2f seconds\n", duration_seconds))
     io.stderr:write(string.format("Successes: %d (%.2f RPS)\n", total_responses, response_per_second))
     io.stderr:write(string.format("Latency: avg=%.2fms, p50=%.2fms, p95=%.2fms, p99=%.2fms\n", avg_ms, p50_ms, p95_ms, p99_ms))
-    io.stderr:write(string.format("Errors: 3xx=%d, 4xx=%d, 5xx=%d, socket=%d\n", errors_3xx, errors_4xx, errors_5xx, socket_connect + socket_read + socket_write + socket_timeout))
+    io.stderr:write(string.format("Errors: 3xx=%d, 4xx=%d, 5xx=%d, socket=%d\n", total_errors_3xx, total_errors_4xx, total_errors_5xx, socket_connect + socket_read + socket_write + socket_timeout))
     io.stderr:write(string.format("Access pattern: Zipfian (s=%f, N=%d)\n", zipf_s, #product_ids))
     io.stderr:write("\nTo get cache metrics, query: curl http://localhost:8080/monitor/cache\n")
 end
