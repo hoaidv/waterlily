@@ -1,4 +1,11 @@
 
+# 08/02/2026 - R2DBC "Too many connections" and pool tuning
+
+- **Cause:** "Too many connections" is returned by MySQL when its `max_connections` limit is hit. The app pool was 500; MySQL default is often 151.
+- **Making requests wait:** R2DBC pool already queues pending `create()` calls when the pool is exhausted. Requests wait up to `maxAcquireTime` (configurable; default 30s, now 60s in config). No extra code needed.
+- **Changes:** `database.maxAcquireTime` and `database.maxCreateConnectionTime` configurable; `maximumPoolSize` reduced to 100; docs added.
+- **Other fixes:** Lower pool size, or raise MySQL `max_connections`; ensure pool size × instances ≤ MySQL limit.
+
 # 03/02/2026 - hoaidv
 
 Cache for ProductDetail per ID
@@ -96,6 +103,10 @@ Adding cache warmup
   + In production, it is a file in a mounted volume.
   + In local, it is provided as `product_ids.txt` (full path)
 
-# 04/02/2026 - hoaidv
+# 08/02/2026 - hoaidv
 
-Add a new metrics: Number of concurrent user using the server.
+Add a new metrics: We need the following measurements as gauges
+- Number of active client connections (count Netty's active channels)
+- Number of active in-flight requests (count Ktor's in-flight requests, no exclusion)
+
+# 08/02

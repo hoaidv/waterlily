@@ -20,16 +20,15 @@ database:
     # - Each request can use up to 4 concurrent DB connections (product, category, variants, media)
     # - With 5000 CCU, need sufficient connections to avoid acquisition timeouts
     # - R2DBC connections are lightweight and non-blocking, so larger pools are feasible
-    maximumPoolSize: 500
+    maximumPoolSize: 100
     minimumIdle: 50
-    connectionTimeout: 3000
-    idleTimeout: 600000
-    maxLifetime: 1800000
+    maxAcquireTimeMs: 3000
+    maxCreateConnectionTimeMs: 30000
 
 # ProductDetail LRU cache
 cache:
     productDetail:
-        enabled: true              # Enable/disable cache (for A/B testing)
+        enabled: false              # Enable/disable cache (for A/B testing)
         maxSize: 2000000           # Maximum number of entries (2M)
         warmup:
             enabled: true          # Enable cache warmup on startup

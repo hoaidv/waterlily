@@ -34,6 +34,8 @@ object R2dbcConfig {
         val password = environment.config.property("database.password").getString()
         val maxPoolSize = environment.config.propertyOrNull("database.maximumPoolSize")?.getString()?.toInt() ?: 50
         val minIdle = environment.config.propertyOrNull("database.minimumIdle")?.getString()?.toInt() ?: 10
+        val maxAcquireTimeMs = environment.config.propertyOrNull("database.maxAcquireTimeMs")?.getString()?.toLongOrNull() ?: 3000L
+        val maxCreateConnectionTimeMs = environment.config.propertyOrNull("database.maxCreateConnectionTimeMs")?.getString()?.toLongOrNull() ?: 30000L
         
         // Parse JDBC URL to extract host, port, database
         // Format: jdbc:mysql://host:port/database?params
@@ -60,15 +62,18 @@ object R2dbcConfig {
                 .build()
         )
         
-        // Create connection pool
+        // Create connection pool.
+        // When the pool is exhausted, new acquire() callers wait in a queue until a connection
+        // is returned or maxAcquireTime elapses. This avoids "Too many connections" by not
+        // creating more connections than maxSize; ensure maxSize <= MySQL max_connections.
         val poolConfig = ConnectionPoolConfiguration.builder(connectionFactory)
             .name("r2dbc-mysql-pool")
             .maxSize(maxPoolSize)
             .minIdle(minIdle)
             .maxIdleTime(Duration.ofMinutes(10))
             .maxLifeTime(Duration.ofMinutes(30))
-            .maxAcquireTime(Duration.ofSeconds(30))
-            .maxCreateConnectionTime(Duration.ofSeconds(30))
+            .maxAcquireTime(Duration.ofMillis(maxAcquireTimeMs))
+            .maxCreateConnectionTime(Duration.ofMillis(maxCreateConnectionTimeMs))
             .acquireRetry(3)
             .build()
         

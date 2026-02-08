@@ -14,12 +14,16 @@ import com.discovery.routes.productRoutes
 import com.discovery.service.ProductService
 import io.ktor.server.application.*
 import io.ktor.server.metrics.micrometer.*
+import io.ktor.server.netty.NettyApplicationEngine
 import io.ktor.server.routing.*
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandlerAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -67,7 +71,37 @@ fun Application.module() {
     install(MicrometerMetrics) {
         registry = prometheusMeterRegistry
     }
-    
+
+    // Gauges: active client connections (Netty channels) and in-flight requests (Ktor pipeline)
+    val activeClientConnections = AtomicInteger(0)
+    val inFlightRequests = AtomicInteger(0)
+    prometheusMeterRegistry.gauge("active_client_connections", activeClientConnections) { it.get().toDouble() }
+    prometheusMeterRegistry.gauge("in_flight_requests", inFlightRequests) { it.get().toDouble() }
+
+    // Count active Netty channels (client connections) via pipeline handler
+    (engine as? NettyApplicationEngine)?.configuration?.channelPipelineConfig = {
+        addLast(object : ChannelInboundHandlerAdapter() {
+            override fun channelActive(ctx: ChannelHandlerContext) {
+                activeClientConnections.incrementAndGet()
+                ctx.fireChannelActive()
+            }
+            override fun channelInactive(ctx: ChannelHandlerContext) {
+                activeClientConnections.decrementAndGet()
+                ctx.fireChannelInactive()
+            }
+        })
+    }
+
+    // Count in-flight requests (no exclusion) via application pipeline interceptor
+    intercept(ApplicationCallPipeline.Call) {
+        inFlightRequests.incrementAndGet()
+        try {
+            proceed()
+        } finally {
+            inFlightRequests.decrementAndGet()
+        }
+    }
+
     // Configure Netty blocking monitor
     install(BlockingMonitorPlugin) {
         enabled = environment.config.propertyOrNull("monitor.blocking.enabled")?.getString()?.toBoolean() ?: true
