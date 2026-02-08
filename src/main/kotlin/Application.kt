@@ -4,6 +4,7 @@ import com.discovery.cache.CacheWarmup
 import com.discovery.cache.ProductDetailCache
 import com.discovery.config.R2dbcConfig
 import com.discovery.plugins.BlockingMonitorPlugin
+import com.discovery.plugins.HighLoadShedderPlugin
 import com.discovery.plugins.configureSerialization
 import com.discovery.plugins.configureStatusPages
 import com.discovery.repository.ProductRepository
@@ -90,6 +91,26 @@ fun Application.module() {
                 ctx.fireChannelInactive()
             }
         })
+    }
+
+    // High load shedder: 503 when RTW/HTT/TOR/TC/CC conditions are met (before counting in-flight)
+    install(HighLoadShedderPlugin) {
+        enabled = environment.config.propertyOrNull("highLoadShedder.enabled")?.getString()?.toBoolean() ?: false
+        recentTimeWindowSeconds = environment.config.propertyOrNull("highLoadShedder.recentTimeWindowSeconds")?.getString()?.toIntOrNull() ?: 12
+        highTrafficThresholdRps = environment.config.propertyOrNull("highLoadShedder.highTrafficThresholdRps")?.getString()?.toIntOrNull() ?: 500
+        timeoutRatePercent = environment.config.propertyOrNull("highLoadShedder.timeoutRatePercent")?.getString()?.toDoubleOrNull() ?: 1.0
+        responseTimeThresholdMs = environment.config.propertyOrNull("highLoadShedder.responseTimeThresholdMs")?.getString()?.toLongOrNull() ?: 3000L
+        checkIntervalSeconds = environment.config.propertyOrNull("highLoadShedder.checkIntervalSeconds")?.getString()?.toLongOrNull() ?: 1L
+        triggerConsecutiveChecks = environment.config.propertyOrNull("highLoadShedder.triggerConsecutiveChecks")?.getString()?.toIntOrNull() ?: 3
+        cooldownConsecutiveChecks = environment.config.propertyOrNull("highLoadShedder.cooldownConsecutiveChecks")?.getString()?.toIntOrNull() ?: 3
+        excludedPaths = environment.config.propertyOrNull("highLoadShedder.excludedPaths")?.getString()
+            ?.splitToSequence(',')
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            .orEmpty()
+            .ifEmpty { setOf("/health", "/ready", "/metrics") }
+        meterRegistry = prometheusMeterRegistry
     }
 
     // Count in-flight requests (no exclusion) via application pipeline interceptor

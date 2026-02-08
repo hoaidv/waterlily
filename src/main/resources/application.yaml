@@ -34,6 +34,18 @@ cache:
             enabled: true          # Enable cache warmup on startup
             productIdsFile: "experiment/product_ids.txt"  # Path to product IDs file
 
+# High load shedder: 503 when RTW/HTT/TOR/TC/CC conditions are met (latency-based)
+highLoadShedder:
+    enabled: true
+    recentTimeWindowSeconds: 12    # RTW
+    highTrafficThresholdRps: 500   # HTT (requests/second in last RTW)
+    timeoutRatePercent: 1.0        # TOR (%, 0..100) in last RTW
+    responseTimeThresholdMs: 1000 # requests with duration >= this count toward TOR
+    checkIntervalSeconds: 3       # CI: check every CI seconds
+    triggerConsecutiveChecks: 3    # TC: enter shedding after TC consecutive satisfied checks
+    cooldownConsecutiveChecks: 1   # CC: exit shedding after CC consecutive unsatisfied checks
+    # excludedPaths: "/health,/ready,/metrics"  # optional comma-separated; defaults to these
+
 # Netty thread blocking monitor
 monitor:
     blocking:

@@ -109,3 +109,23 @@ Add a new metrics: We need the following measurements as gauges
 - **Making requests wait:** R2DBC pool already queues pending `create()` calls when the pool is exhausted. Requests wait up to `maxAcquireTime` (configurable; default 30s, now 60s in config). No extra code needed.
 - **Changes:** `database.maxAcquireTime` and `database.maxCreateConnectionTime` configurable; `maximumPoolSize` reduced to 100; docs added.
 - **Other fixes:** Lower pool size, or raise MySQL `max_connections`; ensure pool size × instances ≤ MySQL limit.
+
+# 08/02/2026 - Highload detection strategy - hoaidv
+
+Let's implement that highload detection strategy 
+- RTW = Recent Time Window (second)
+- HTT = High Traffic threshold (request/second) in last RTW seconds 
+- TOR = Timeout Rate in last RTW seconds (%, 0..100]
+- CI = Check Interval = Check every CI seconds 
+- TC = Trigger Condition
++ Number of consecutive checks
+- CC = Cooldown Condition 
++ Number of consecutive checks
+
+Check = Traffic reaches "HTT RPS" and Timeout reaches "TOR %" in last RTW seconds
+(This check may be changed)
+
+Warning: Immediately after first check is statisfed 
+Trigger 503: Immediately after trigger condition is satisfied
+Cooldown: Immediately exit trigger state after cooldown condition is satisfied 
+
