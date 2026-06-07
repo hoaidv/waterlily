@@ -8,7 +8,7 @@
       "throughput": "HEAVY",
       "complexity": "MEDIUM",
       "distribution": "zipfian",
-      "zipfian_exponent": 1,
+      "zipfian_exponent": 1.4,
       "product_count": 0
     }
   },
